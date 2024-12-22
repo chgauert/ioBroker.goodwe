@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "goodwe",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "news": {
+      "1.0.5": {
+        "en": "(Christian Gauert) Added several modifications based on python goodwe library",
+        "de": "(Christian Gauert) Änderungen basierend auf python goodwe Bibliothek",
+        },
       "1.0.4": {
         "en": "(Thomas Schönberger) Add some Logs for ENETUNREACH error",
         "de": "(Thomas Schönberger) Fügen Sie einige Logs für ENETUNREACH-Fehler hinzu",

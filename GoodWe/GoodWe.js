@@ -57,25 +57,35 @@ class GoodWeDeviceInfo {
 	ARM_IntFirmwareVersion = "";
 }
 
+class PowerParameters {
+	Value = 0.0;
+	Unit = "";
+
+	get ValueAsString() {
+		return this.Value + " " + this.Unit;
+	}
+}
+
 class DcParameters {
 	Voltage = 0.0;
 	Current = 0.0;
-	Power = 0.0;
+	Power = new PowerParameters();
 	Mode = 0;
+	ModeLabel = "";
 }
 
 class AcPhase {
 	Voltage = 0.0;
 	Current = 0.0;
 	Frequency = 0.0;
-	Power = 0.0;
+	Power = new PowerParameters();
 }
 
 class ACPhaseBackup {
 	Voltage = 0.0;
 	Current = 0.0;
 	Frequency = 0.0;
-	Power = 0.0;
+	Power = new PowerParameters();
 	Mode = 0;
 }
 
@@ -85,22 +95,33 @@ class GoodWeRunningData {
 	Pv2 = new DcParameters();
 	Pv3 = new DcParameters();
 	Pv4 = new DcParameters();
+
 	GridL1 = new AcPhase();
 	GridL2 = new AcPhase();
 	GridL3 = new AcPhase();
 	GridMode = 0;
-	InverterTotalPower = 0;
-	AcActivePower = 0;
-	AcReactivePower = 0;
-	AcApparentPower = 0;
+	GridModeLabel = "";
+	GridInOutModeLabel = "";
+
 	BackUpL1 = new ACPhaseBackup();
 	BackUpL2 = new ACPhaseBackup();
 	BackUpL3 = new ACPhaseBackup();
-	PowerL1 = 0;
-	PowerL2 = 0;
-	PowerL3 = 0;
-	TotalPowerBackUp = 0;
-	TotalPower = 0;
+
+	PowerInverterOperation = new PowerParameters();
+
+	PowerActiveAC = new PowerParameters();
+	PowerReactiveAC = 0;
+	PowerApparentAC = 0;
+
+	PowerL1 = new PowerParameters();
+	PowerL2 = new PowerParameters();
+	PowerL3 = new PowerParameters();
+
+	PowerBackUpLine = new PowerParameters();
+	PowerGridLine = new PowerParameters();
+
+	Battery1 = new DcParameters();
+
 	UpsLoadPercent = 0;
 	AirTemperature = 0.0;
 	ModulTemperature = 0.0;
@@ -108,33 +129,41 @@ class GoodWeRunningData {
 	FunctionBitValue = 0;
 	BusVoltage = 0.0;
 	NbusVoltage = 0.0;
-	Battery1 = new DcParameters();
 	WarningCode = 0;
 	SaftyCountry = 0;
+	SaftyCountryLabel = "";
 	WorkMode = 0;
+	WorkModeLabel = "";
 	OperationMode = 0;
 	ErrorMessage = 0;
-	PvEnergyTotal = 0.0;
-	PvEnergyDay = 0.0;
-	EnergyTotal = 0.0;
+	ErrorMessageLabel = "";
 	HoursTotal = 0.0;
-	EnergyDaySell = 0.0;
-	EnergyTotalBuy = 0.0;
-	EnergyDayBuy = 0.0;
-	EnergyTotalLoad = 0.0;
-	EnergyDayLoad = 0.0;
-	EnergyBatteryCharge = 0.0;
-	EnergyDayCharge = 0.0;
-	EnergyBatteryDischarge = 0.0;
-	EnergyDayDischarge = 0.0;
+
+	EnergyPvTotal = new PowerParameters();
+	EnergyPvToday = new PowerParameters();
+	EnergyInverterOutTotal = new PowerParameters();
+	EnergyInverterOutToday = new PowerParameters();
+	EnergyInverterInTotal = new PowerParameters();
+	EnergyInverterInToday = new PowerParameters();
+	EnergyLoadTotal = new PowerParameters();
+	EnergyLoadToday = new PowerParameters();
+	EnergyBatteryChargeTotal = new PowerParameters();
+	EnergyBatteryChargeToday = new PowerParameters();
+	EnergyBatteryDischargeTotal = new PowerParameters();
+	EnergyBatteryDischargeToday = new PowerParameters();
+
 	BatteryStrings = 0;
 	CpldWarningCode = 0;
 	WChargeCtrFlag = 0;
 	DerateFlag = 0;
 	DerateFrozenPower = 0;
-	DiagStatusH = 0;
-	DiagStatusL = 0;
-	TotalPowerPv = 0;
+	DiagStatusHigh = 0;
+	DiagStatusLow = 0;
+	DiagStatusLowAsString = "";
+
+	PowerAllPv = new PowerParameters();
+	PowerHouseConsumptionPv = new PowerParameters();
+	PowerHouseConsumptionAC = new PowerParameters();
 }
 
 class GoodWeMeterPhase {
@@ -155,19 +184,33 @@ class GoodWeExternalComData {
 	TotalReactivePower = 0;
 	PowerFactor = 0.0;
 	Frequency = 0.0;
-	EnergyTotalSell = 0.0;
-	EnergyTotalBuy = 0.0;
+	EnergyTotalSell = new PowerParameters();
+	EnergyTotalBuy = new PowerParameters();
 }
 
 class GoodweBmSInfo {
 	Status = 0;
 	PackTemperature = 0.0;
-	CurrentMaxCharge = 0;
-	CurrentMaxDischarge = 0;
-	ErrorCode = 0;
+	MaxChargeCurrent = 0;
+	MaxDischargeCurrent = 0;
 	SOC = 0;
 	SOH = 0;
 	BatteryStrings = 0;
+	Protocol = 0;
+	ErrorCodeLow = 0;
+	ErrorCodeHigh = 0;
+	WarningCodeLow = 0;
+	WarningCodeHigh = 0;
+	VersionSW = 0;
+	VersionHW = 0;
+	MaxCellTempID = 0;
+	MinCellTempID = 0;
+	MaxCellVoltageID = 0;
+	MinCellVoltageID = 0;
+	MaxCellTemperature = 0.0;
+	MinCellTemperature = 0.0;
+	MaxCellVoltage = 0.0;
+	MinCellVoltage = 0.0;
 }
 
 class GoodWeUdp {
@@ -334,57 +377,98 @@ class GoodWeUdp {
 				if (this.#CheckRecRegisterData(rcvbuf, sendbuf[1], sendbuf[5])) {
 					this.#runningData.Pv1.Voltage = this.#GetUintFromByteArray(rcvbuf, 11, 2) / 10;
 					this.#runningData.Pv1.Current = this.#GetUintFromByteArray(rcvbuf, 13, 2) / 10;
-					this.#runningData.Pv1.Power = this.#GetUintFromByteArray(rcvbuf, 15, 4);
+					this.#runningData.Pv1.Power.Value = this.#GetUintFromByteArray(rcvbuf, 15, 4);
+					this.#runningData.Pv1.Power.Unit = "W";
+
 					this.#runningData.Pv2.Voltage = this.#GetUintFromByteArray(rcvbuf, 19, 2) / 10;
 					this.#runningData.Pv2.Current = this.#GetUintFromByteArray(rcvbuf, 21, 2) / 10;
-					this.#runningData.Pv2.Power = this.#GetUintFromByteArray(rcvbuf, 23, 4);
+					this.#runningData.Pv2.Power.Value = this.#GetUintFromByteArray(rcvbuf, 23, 4);
+					this.#runningData.Pv2.Power.Unit = "W";
+
 					this.#runningData.Pv3.Voltage = this.#GetUintFromByteArray(rcvbuf, 27, 2) / 10;
 					this.#runningData.Pv3.Current = this.#GetUintFromByteArray(rcvbuf, 29, 2) / 10;
-					this.#runningData.Pv3.Power = this.#GetUintFromByteArray(rcvbuf, 31, 4);
+					this.#runningData.Pv3.Power.Value = this.#GetUintFromByteArray(rcvbuf, 31, 4);
+					this.#runningData.Pv3.Power.Unit = "W";
+
 					this.#runningData.Pv4.Voltage = this.#GetUintFromByteArray(rcvbuf, 35, 2) / 10;
 					this.#runningData.Pv4.Current = this.#GetUintFromByteArray(rcvbuf, 37, 2) / 10;
-					this.#runningData.Pv4.Power = this.#GetUintFromByteArray(rcvbuf, 39, 4);
+					this.#runningData.Pv4.Power.Value = this.#GetUintFromByteArray(rcvbuf, 39, 4);
+					this.#runningData.Pv4.Power.Unit = "W";
+
 					this.#runningData.Pv4.Mode = rcvbuf[43];
+					this.#runningData.Pv4.ModeLabel = this.#LabelDictionaries.PvModeAsString[this.#runningData.Pv4.Mode];
 					this.#runningData.Pv3.Mode = rcvbuf[44];
+					this.#runningData.Pv3.ModeLabel = this.#LabelDictionaries.PvModeAsString[this.#runningData.Pv3.Mode];
 					this.#runningData.Pv2.Mode = rcvbuf[45];
+					this.#runningData.Pv2.ModeLabel = this.#LabelDictionaries.PvModeAsString[this.#runningData.Pv2.Mode];
 					this.#runningData.Pv1.Mode = rcvbuf[46];
+					this.#runningData.Pv1.ModeLabel = this.#LabelDictionaries.PvModeAsString[this.#runningData.Pv1.Mode];
+
 					this.#runningData.GridL1.Voltage = this.#GetUintFromByteArray(rcvbuf, 47, 2) / 10;
 					this.#runningData.GridL1.Current = this.#GetUintFromByteArray(rcvbuf, 49, 2) / 10;
 					this.#runningData.GridL1.Frequency = this.#GetUintFromByteArray(rcvbuf, 51, 2) / 100;
-					this.#runningData.GridL1.Power = this.#GetIntFromByteArray(rcvbuf, 55, 2);
+					this.#runningData.GridL1.Power.Value = this.#GetIntFromByteArray(rcvbuf, 55, 2);
+					this.#runningData.GridL1.Power.Unit = "W";
+
 					this.#runningData.GridL2.Voltage = this.#GetUintFromByteArray(rcvbuf, 57, 2) / 10;
 					this.#runningData.GridL2.Current = this.#GetUintFromByteArray(rcvbuf, 59, 2) / 10;
 					this.#runningData.GridL2.Frequency = this.#GetUintFromByteArray(rcvbuf, 61, 2) / 100;
-					this.#runningData.GridL2.Power = this.#GetIntFromByteArray(rcvbuf, 65, 2);
+					this.#runningData.GridL2.Power.Value = this.#GetIntFromByteArray(rcvbuf, 65, 2);
+					this.#runningData.GridL2.Power.Unit = "W";
+
 					this.#runningData.GridL3.Voltage = this.#GetUintFromByteArray(rcvbuf, 67, 2) / 10;
 					this.#runningData.GridL3.Current = this.#GetUintFromByteArray(rcvbuf, 69, 2) / 10;
 					this.#runningData.GridL3.Frequency = this.#GetUintFromByteArray(rcvbuf, 71, 2) / 100;
-					this.#runningData.GridL3.Power = this.#GetIntFromByteArray(rcvbuf, 75, 2);
+					this.#runningData.GridL3.Power.Value = this.#GetIntFromByteArray(rcvbuf, 75, 2);
+					this.#runningData.GridL3.Power.Unit = "W";
+
 					this.#runningData.GridMode = this.#GetUintFromByteArray(rcvbuf, 77, 2);
-					this.#runningData.InverterTotalPower = this.#GetIntFromByteArray(rcvbuf, 81, 2);
-					this.#runningData.AcActivePower = this.#GetIntFromByteArray(rcvbuf, 85, 2);
-					this.#runningData.AcReactivePower = this.#GetIntFromByteArray(rcvbuf, 89, 2);
-					this.#runningData.AcApparentPower = this.#GetIntFromByteArray(rcvbuf, 93, 2);
+					this.#runningData.GridModeLabel = this.#LabelDictionaries.GridModeAsString[this.#runningData.GridMode];
+
+					this.#runningData.PowerInverterOperation.Value = this.#GetIntFromByteArray(rcvbuf, 81, 2);
+					this.#runningData.PowerInverterOperation.Unit = "W";
+
+					this.#runningData.PowerActiveAC.Value = this.#GetIntFromByteArray(rcvbuf, 85, 2);
+					this.#runningData.PowerActiveAC.Unit = "W";
+
+					this.#runningData.PowerReactiveAC = this.#GetIntFromByteArray(rcvbuf, 89, 2);
+					this.#runningData.PowerApparentAC = this.#GetIntFromByteArray(rcvbuf, 93, 2);
+
+					this.#runningData.GridInOutModeLabel = this.#GetGridInOutModeLabel(this.#runningData.PowerActiveAC.Value);
+
 					this.#runningData.BackUpL1.Voltage = this.#GetUintFromByteArray(rcvbuf, 95, 2) / 10;
 					this.#runningData.BackUpL1.Current = this.#GetUintFromByteArray(rcvbuf, 97, 2) / 10;
 					this.#runningData.BackUpL1.Frequency = this.#GetUintFromByteArray(rcvbuf, 99, 2) / 100;
 					this.#runningData.BackUpL1.Mode = this.#GetUintFromByteArray(rcvbuf, 101, 2);
-					this.#runningData.BackUpL1.Power = this.#GetIntFromByteArray(rcvbuf, 105, 2);
+					this.#runningData.BackUpL1.Power.Value = this.#GetIntFromByteArray(rcvbuf, 105, 2);
+					this.#runningData.BackUpL1.Power.Unit = "W";
+
 					this.#runningData.BackUpL2.Voltage = this.#GetUintFromByteArray(rcvbuf, 107, 2) / 10;
 					this.#runningData.BackUpL2.Current = this.#GetUintFromByteArray(rcvbuf, 109, 2) / 10;
 					this.#runningData.BackUpL2.Frequency = this.#GetUintFromByteArray(rcvbuf, 111, 2) / 100;
 					this.#runningData.BackUpL2.Mode = this.#GetUintFromByteArray(rcvbuf, 113, 2);
-					this.#runningData.BackUpL2.Power = this.#GetIntFromByteArray(rcvbuf, 117, 2);
+					this.#runningData.BackUpL2.Power.Value = this.#GetIntFromByteArray(rcvbuf, 117, 2);
+					this.#runningData.BackUpL2.Power.Unit = "W";
+
 					this.#runningData.BackUpL3.Voltage = this.#GetUintFromByteArray(rcvbuf, 119, 2) / 10;
 					this.#runningData.BackUpL3.Current = this.#GetUintFromByteArray(rcvbuf, 121, 2) / 10;
 					this.#runningData.BackUpL3.Frequency = this.#GetUintFromByteArray(rcvbuf, 123, 2) / 100;
 					this.#runningData.BackUpL3.Mode = this.#GetUintFromByteArray(rcvbuf, 125, 2);
-					this.#runningData.BackUpL3.Power = this.#GetIntFromByteArray(rcvbuf, 129, 2);
-					this.#runningData.PowerL1 = this.#GetIntFromByteArray(rcvbuf, 133, 2);
-					this.#runningData.PowerL2 = this.#GetIntFromByteArray(rcvbuf, 137, 2);
-					this.#runningData.PowerL3 = this.#GetIntFromByteArray(rcvbuf, 141, 2);
-					this.#runningData.TotalPowerBackUp = this.#GetIntFromByteArray(rcvbuf, 145, 2);
-					this.#runningData.TotalPower = this.#GetIntFromByteArray(rcvbuf, 149, 2);
+					this.#runningData.BackUpL3.Power.Value = this.#GetIntFromByteArray(rcvbuf, 129, 2);
+					this.#runningData.BackUpL3.Power.Unit = "W";
+
+					this.#runningData.PowerL1.Value = this.#GetIntFromByteArray(rcvbuf, 133, 2);
+					this.#runningData.PowerL1.Unit = "W";
+					this.#runningData.PowerL2.Value = this.#GetIntFromByteArray(rcvbuf, 137, 2);
+					this.#runningData.PowerL2.Unit = "W";
+					this.#runningData.PowerL3.Value = this.#GetIntFromByteArray(rcvbuf, 141, 2);
+					this.#runningData.PowerL3.Unit = "W";
+
+					this.#runningData.PowerBackUpLine.Value = this.#GetIntFromByteArray(rcvbuf, 145, 2);
+					this.#runningData.PowerBackUpLine.Unit = "W";
+					this.#runningData.PowerGridLine.Value = this.#GetIntFromByteArray(rcvbuf, 149, 2);
+					this.#runningData.PowerGridLine.Unit = "W";
+
 					this.#runningData.UpsLoadPercent = this.#GetUintFromByteArray(rcvbuf, 151, 2);
 					this.#runningData.AirTemperature = this.#GetIntFromByteArray(rcvbuf, 153, 2) / 10;
 					this.#runningData.ModulTemperature = this.#GetIntFromByteArray(rcvbuf, 155, 2) / 10;
@@ -392,36 +476,74 @@ class GoodWeUdp {
 					this.#runningData.FunctionBitValue = this.#GetUintFromByteArray(rcvbuf, 159, 2);
 					this.#runningData.BusVoltage = this.#GetUintFromByteArray(rcvbuf, 161, 2) / 10;
 					this.#runningData.NbusVoltage = this.#GetUintFromByteArray(rcvbuf, 163, 2) / 10;
+
 					this.#runningData.Battery1.Voltage = this.#GetUintFromByteArray(rcvbuf, 165, 2) / 10;
 					this.#runningData.Battery1.Current = this.#GetIntFromByteArray(rcvbuf, 167, 2) / 10;
-					this.#runningData.Battery1.Power = this.#GetIntFromByteArray(rcvbuf, 171, 2);
+					this.#runningData.Battery1.Power.Value = this.#GetIntFromByteArray(rcvbuf, 171, 2);
+					this.#runningData.Battery1.Power.Unit = "W";
 					this.#runningData.Battery1.Mode = this.#GetUintFromByteArray(rcvbuf, 173, 2);
+					this.#runningData.Battery1.ModeLabel = this.#LabelDictionaries.BatteryModeAsString[this.#runningData.Battery1.Mode];
+
 					this.#runningData.WarningCode = this.#GetUintFromByteArray(rcvbuf, 175, 2);
 					this.#runningData.SaftyCountry = this.#GetUintFromByteArray(rcvbuf, 177, 2);
+					this.#runningData.SaftyCountryLabel = this.#LabelDictionaries.SafetyCountryCodeAsString[this.#runningData.SaftyCountry];
+
 					this.#runningData.WorkMode = this.#GetUintFromByteArray(rcvbuf, 179, 2);
+					this.#runningData.WorkModeLabel = this.#LabelDictionaries.InverteWorkModeTypeETAsString[this.#runningData.WorkMode];
+
 					this.#runningData.OperationMode = this.#GetUintFromByteArray(rcvbuf, 181, 2);
+
 					this.#runningData.ErrorMessage = this.#GetUintFromByteArray(rcvbuf, 183, 4);
-					this.#runningData.PvEnergyTotal = this.#GetUintFromByteArray(rcvbuf, 187, 4) / 10;
-					this.#runningData.PvEnergyDay = this.#GetUintFromByteArray(rcvbuf, 191, 4) / 10;
-					this.#runningData.EnergyTotal = this.#GetUintFromByteArray(rcvbuf, 195, 4) / 10;
+					this.#runningData.ErrorMessageLabel = this.#decodeBitmap(this.#runningData.ErrorMessage, this.#LabelDictionaries.ErrorCodeAsString);
+
+					this.#runningData.EnergyPvTotal.Value = this.#GetUintFromByteArray(rcvbuf, 187, 4) / 10;
+					this.#runningData.EnergyPvTotal.Unit = "kWh";
+					this.#runningData.EnergyPvToday.Value = this.#GetUintFromByteArray(rcvbuf, 191, 4) / 10;
+					this.#runningData.EnergyPvToday.Unit = "kWh";
+
+					this.#runningData.EnergyInverterOutTotal.Value = this.#GetUintFromByteArray(rcvbuf, 195, 4) / 10;
+					this.#runningData.EnergyInverterOutTotal.Unit = "kWh";
+
 					this.#runningData.HoursTotal = this.#GetUintFromByteArray(rcvbuf, 199, 4);
-					this.#runningData.EnergyDaySell = this.#GetUintFromByteArray(rcvbuf, 203, 2) / 10;
-					this.#runningData.EnergyTotalBuy = this.#GetUintFromByteArray(rcvbuf, 205, 4) / 10;
-					this.#runningData.EnergyDayBuy = this.#GetUintFromByteArray(rcvbuf, 209, 2) / 10;
-					this.#runningData.EnergyTotalLoad = this.#GetUintFromByteArray(rcvbuf, 211, 4) / 10;
-					this.#runningData.EnergyDayLoad = this.#GetUintFromByteArray(rcvbuf, 215, 2) / 10;
-					this.#runningData.EnergyBatteryCharge = this.#GetUintFromByteArray(rcvbuf, 217, 4) / 10;
-					this.#runningData.EnergyDayCharge = this.#GetUintFromByteArray(rcvbuf, 221, 2) / 10;
-					this.#runningData.EnergyBatteryDischarge = this.#GetUintFromByteArray(rcvbuf, 223, 4) / 10;
-					this.#runningData.EnergyDayDischarge = this.#GetUintFromByteArray(rcvbuf, 227, 4) / 10;
+
+					this.#runningData.EnergyInverterOutToday.Value  = this.#GetUintFromByteArray(rcvbuf, 203, 2) / 10;
+					this.#runningData.EnergyInverterOutToday.Unit = "kWh";
+					this.#runningData.EnergyInverterInTotal.Value  = this.#GetUintFromByteArray(rcvbuf, 205, 4) / 10;
+					this.#runningData.EnergyInverterInTotal.Unit = "kWh";
+					this.#runningData.EnergyInverterInToday.Value  = this.#GetUintFromByteArray(rcvbuf, 209, 2) / 10;
+					this.#runningData.EnergyInverterInToday.Unit = "kWh";
+
+					this.#runningData.EnergyLoadTotal.Value = this.#GetUintFromByteArray(rcvbuf, 211, 4) / 10;
+					this.#runningData.EnergyLoadTotal.Unit = "kWh";
+					this.#runningData.EnergyLoadToday.Value = this.#GetUintFromByteArray(rcvbuf, 215, 2) / 10;
+					this.#runningData.EnergyLoadToday.Unit = "kWh";
+
+					this.#runningData.EnergyBatteryChargeTotal.Value = this.#GetUintFromByteArray(rcvbuf, 217, 4) / 10;
+					this.#runningData.EnergyBatteryChargeTotal.Unit = "kWh";
+					this.#runningData.EnergyBatteryChargeToday.Value = this.#GetUintFromByteArray(rcvbuf, 221, 2) / 10;
+					this.#runningData.EnergyBatteryChargeToday.Unit = "kWh";
+					this.#runningData.EnergyBatteryDischargeTotal.Value = this.#GetUintFromByteArray(rcvbuf, 223, 4) / 10;
+					this.#runningData.EnergyBatteryDischargeTotal.Unit = "kWh";
+					this.#runningData.EnergyBatteryDischargeToday.Value = this.#GetUintFromByteArray(rcvbuf, 227, 2) / 10;
+					this.#runningData.EnergyBatteryDischargeToday.Unit = "kWh";
+
 					this.#runningData.BatteryStrings = this.#GetUintFromByteArray(rcvbuf, 229, 2);
 					this.#runningData.CpldWarningCode = this.#GetUintFromByteArray(rcvbuf, 231, 2);
 					this.#runningData.WChargeCtrFlag = this.#GetUintFromByteArray(rcvbuf, 233, 2);
 					this.#runningData.DerateFlag = this.#GetUintFromByteArray(rcvbuf, 235, 2);
 					this.#runningData.DerateFrozenPower = this.#GetUintFromByteArray(rcvbuf, 237, 4);
-					this.#runningData.DiagStatusH = this.#GetUintFromByteArray(rcvbuf, 241, 4);
-					this.#runningData.DiagStatusL = this.#GetUintFromByteArray(rcvbuf, 245, 4);
-					this.#runningData.TotalPowerPv = this.#runningData.Pv1.Power + this.#runningData.Pv2.Power + this.#runningData.Pv3.Power + this.#runningData.Pv4.Power;
+					this.#runningData.DiagStatusHigh = this.#GetUintFromByteArray(rcvbuf, 241, 4);
+					this.#runningData.DiagStatusLow = this.#GetUintFromByteArray(rcvbuf, 245, 4);
+					this.#runningData.DiagStatusLowAsString = this.#decodeBitmap(this.#runningData.DiagStatusLow, this.#LabelDictionaries.DiagStatusCodesAsString);
+
+					this.#runningData.PowerAllPv.Value = this.#runningData.Pv1.Power.Value + this.#runningData.Pv2.Power.Value + this.#runningData.Pv3.Power.Value + this.#runningData.Pv4.Power.Value;
+					this.#runningData.PowerAllPv.Unit = "W";
+
+					this.#runningData.PowerHouseConsumptionPv.Value = this.#runningData.PowerAllPv.Value + this.#runningData.Battery1.Power.Value;
+					this.#runningData.PowerHouseConsumptionPv.Unit = "W";
+
+					this.#runningData.PowerHouseConsumptionAC.Value = this.#runningData.PowerAllPv.Value + this.#runningData.Battery1.Power.Value - this.#runningData.PowerActiveAC.Value;
+					this.#runningData.PowerHouseConsumptionAC.Unit = "W";
 
 					this.#status = GoodWeUdp.ConStatus.Online;
 				} else {
@@ -481,8 +603,10 @@ class GoodWeUdp {
 					this.#extComData.L3.PowerFactor = this.#GetUintFromByteArray(rcvbuf, 29, 2) / 100;
 					this.#extComData.PowerFactor = this.#GetUintFromByteArray(rcvbuf, 31, 2) / 100;
 					this.#extComData.Frequency = this.#GetUintFromByteArray(rcvbuf, 33, 2) / 100;
-					this.#extComData.EnergyTotalSell = this.#GetFloatFromByteArray(rcvbuf, 35, 4) / 10;
-					this.#extComData.EnergyTotalBuy = this.#GetFloatFromByteArray(rcvbuf, 39, 4) / 10;
+					this.#extComData.EnergyTotalSell.Value = this.#GetFloatFromByteArray(rcvbuf, 35, 4) / 1000;
+					this.#extComData.EnergyTotalSell.Unit = "kWh";
+					this.#extComData.EnergyTotalBuy.Value = this.#GetFloatFromByteArray(rcvbuf, 39, 4) / 1000;
+					this.#extComData.EnergyTotalBuy.Unit = "kWh";
 
 					this.#status = GoodWeUdp.ConStatus.Online;
 				} else {
@@ -511,7 +635,7 @@ class GoodWeUdp {
 		sendbuf[2] = 0x90;
 		sendbuf[3] = 0x8a;
 		sendbuf[4] = 0x00;
-		sendbuf[5] = 0x08;
+		sendbuf[5] = 0x16;
 
 		crc = this.#CalculatetCrc16(sendbuf, 0, 6);
 
@@ -529,12 +653,26 @@ class GoodWeUdp {
 				if (this.#CheckRecRegisterData(rcvbuf, sendbuf[1], sendbuf[5])) {
 					this.#bmsInfo.Status = this.#GetUintFromByteArray(rcvbuf, 5, 2);
 					this.#bmsInfo.PackTemperature = this.#GetUintFromByteArray(rcvbuf, 7, 2) / 10;
-					this.#bmsInfo.CurrentMaxCharge = this.#GetUintFromByteArray(rcvbuf, 9, 2);
-					this.#bmsInfo.CurrentMaxDischarge = this.#GetUintFromByteArray(rcvbuf, 11, 2);
-					this.#bmsInfo.ErrorCode = this.#GetUintFromByteArray(rcvbuf, 13, 2);
+					this.#bmsInfo.MaxChargeCurrent = this.#GetUintFromByteArray(rcvbuf, 9, 2);
+					this.#bmsInfo.MaxDischargeCurrent = this.#GetUintFromByteArray(rcvbuf, 11, 2);
+					this.#bmsInfo.ErrorCodeLow = this.#GetUintFromByteArray(rcvbuf, 13, 2);
 					this.#bmsInfo.SOC = this.#GetUintFromByteArray(rcvbuf, 15, 2);
 					this.#bmsInfo.SOH = this.#GetUintFromByteArray(rcvbuf, 17, 2);
 					this.#bmsInfo.BatteryStrings = this.#GetUintFromByteArray(rcvbuf, 19, 2);
+					this.#bmsInfo.WarningCodeLow = this.#GetUintFromByteArray(rcvbuf, 21, 2);
+					this.#bmsInfo.Protocol = this.#GetUintFromByteArray(rcvbuf, 23, 2);
+					this.#bmsInfo.ErrorCodeHigh = this.#GetUintFromByteArray(rcvbuf, 25, 2);
+					this.#bmsInfo.WarningCodeHigh = this.#GetUintFromByteArray(rcvbuf, 27, 2);
+					this.#bmsInfo.VersionSW = this.#GetUintFromByteArray(rcvbuf, 29, 2);
+					this.#bmsInfo.VersionHW = this.#GetUintFromByteArray(rcvbuf, 31, 2);
+					this.#bmsInfo.MaxCellTempID = this.#GetUintFromByteArray(rcvbuf, 33, 2);
+					this.#bmsInfo.MinCellTempID = this.#GetUintFromByteArray(rcvbuf, 35, 2);
+					this.#bmsInfo.MaxCellVoltageID = this.#GetUintFromByteArray(rcvbuf, 37, 2);
+					this.#bmsInfo.MinCellVoltageID = this.#GetUintFromByteArray(rcvbuf, 39, 2);
+					this.#bmsInfo.MaxCellTemperature = this.#GetUintFromByteArray(rcvbuf, 41, 2) / 10;
+					this.#bmsInfo.MinCellTemperature = this.#GetUintFromByteArray(rcvbuf, 43, 2) / 10;
+					this.#bmsInfo.MaxCellVoltage = this.#GetUintFromByteArray(rcvbuf, 45, 2) / 1000;
+					this.#bmsInfo.MinCellVoltage = this.#GetUintFromByteArray(rcvbuf, 47, 2) / 1000;
 
 					this.#status = GoodWeUdp.ConStatus.Online;
 				} else {
@@ -723,7 +861,305 @@ class GoodWeUdp {
 	get BmsInfo() {
 		return this.#bmsInfo;
 	}
+
+	#decodeBitmap(BitMask, StringDict) {
+		let bits = BitMask;
+		let result = [];
+
+		for (let i = 0; i < 32; i++) {
+			if ((bits & 0x1) === 1) {
+				result.push(StringDict[i] || `err${i}`);
+			}
+			bits = bits >> 1;
+		}
+		return result.join(", ");
+	}
+
+	#GetGridInOutModeLabel(AcPowerValue) {
+		if(AcPowerValue == 0)
+			return this.#LabelDictionaries.GridInOutModeAsString[0];
+		if(AcPowerValue > 0)
+			return this.#LabelDictionaries.GridInOutModeAsString[1];
+		if(AcPowerValue < 0)
+			return this.#LabelDictionaries.GridInOutModeAsString[2];
+
+		return "";
+	}
+
+	#LabelDictionaries = {
+		GridInOutModeAsString:[
+			"Idle",
+			"Exporting",
+			"Importing"
+		],
+
+		GridModeAsString:[
+			"Not connected to grid",
+			"Connected to grid",
+			"Fault"
+		],
+
+		BatteryModeAsString:[
+			"No battery",
+			"Standby",
+			"Discharge",
+			"Charge",
+			"To be charged",
+			"To be discharged"
+		],
+
+		InverteWorkModeTypeETAsString:[
+			"Wait Mode",
+			"Normal (On-Grid)",
+			"Normal (Off-Grid)",
+			"Fault Mode",
+			"Flash Mode",
+			"Check Mode"
+		],
+
+		PvModeAsString:[
+			"PV panels not connected",
+			"PV panels connected, no power",
+			"PV panels connected, producing power"
+		],
+
+		ErrorCodeAsString:[
+			"GFCI Device Check Failure",
+			"AC HCT Check Failure",
+			"",
+			"DCI Consistency Failure",
+			"GFCI Consistency Failure",
+			"",
+			"GFCI Device Failure",
+			"Relay Device Failure",
+			"AC HCT Failure",
+			"Utility Loss",
+			"Ground I Failure",
+			"DC Bus High",
+			"InternalFan Failure",
+			"Over Temperature",
+			"Utility Phase Failure",
+			"PV Over Voltage",
+			"External Fan Failure",
+			"Vac Failure",
+			"Isolation Failure",
+			"DC Injection High",
+			"Back-Up Over Load",
+			"",
+			"Fac Consistency Failure",
+			"Vac Consistency Failure",
+			"",
+			"Relay Check Failure",
+			"",
+			"PhaseAngleFailure",
+			"DSP communication failure",
+			"Fac Failure",
+			"EEPROM R/W Failure",
+			"Internal Communication Failure"
+		],
+
+		DiagStatusCodesAsString:[
+			"Battery voltage low",
+			"Battery SOC low",
+			"Battery SOC in back",
+			"BMS: Discharge disabled",
+			"Discharge time on",
+			"Charge time on",
+    		"Discharge Driver On",
+    		"BMS: Discharge current too low",
+    		"APP: Discharge current too low",
+    		"Meter communication failure",
+    		"Meter connection reversed",
+    		"Self-use load light",
+    		"EMS: discharge current is zero",
+    		"Discharge BUS high PV voltage",
+    		"Battery Disconnected",
+    		"Battery Overcharged",
+    		"BMS: Temperature too high",
+    		"BMS: Charge too high",
+    		"BMS: Charge disabled",
+    		"Self-use off",
+    		"SOC delta too volatile",
+    		"Battery self discharge too high",
+    		"Battery SOC low (off-grid)",
+    		"Grid wave unstable",
+    		"Export power limit set",
+    		"PF value set",
+    		"Real power limit set",
+    		"DC output on",
+    		"SOC protect off"
+		],
+
+		BMSAlarmCodesAsString:[
+			"Charging over-voltage 2",
+			"Discharging under-voltage 2",
+			"Cell temperature high 2",
+			"Cell temperature low 2",
+			"Charging over-current 2",
+			"Discharging over-current 2",
+			"Precharge fault",
+			"DC bus fault",
+			"Battery break",
+			"Battery lock",
+			"Discharging circuit failure",
+			"Charging circuit failure",
+			"Communication failure 2",
+			"Cell temperature high 3",
+			"Discharging under-voltage 3",
+			"Charging over-voltage 3"
+		],
+
+		BMSWarningCodesAsString:[
+			"Charging over-voltage 1",
+			"Discharging under-voltage 1",
+			"Cell temperature high 1",
+			"Cell temperature low 1",
+			"Charging over-current 1",
+			"Discharging over-current 1",
+			"Communication failure 1",
+			"System reboot",
+			"Cell imbalance",
+			"System temperature low 1",
+			"System temperature low 2",
+			"System temperature high"
+		],
+
+		SafetyCountryCodeAsString:[
+			"IT CEI 0-21",
+			"CZ-A1",
+			"DE LV with PV",
+			"ES-A",
+			"GR",
+			"DK2",
+			"BE",
+			"RO-A",
+			"GB G98",
+			"Australia A",
+			"FR mainland",
+			"China",
+			"60Hz 230Vac Default",
+			"PL LV",
+			"South Africa",
+			"",
+			"Brazil 220Vac",
+			"Thailand MEA",
+			"Thailand PEA",
+			"Mauritius",
+			"NL-A",
+			"G98/NI",
+			"China Higher",
+			"FR island 50Hz",
+			"FR island 60Hz",
+			"Australia Ergon",
+			"Australia Energex",
+			"NL 16/20A",
+			"Korea",
+			"China Utility",
+			"AT-A",
+			"India",
+			"50Hz 230Vac Default",
+			"Warehouse",
+			"Philippines",
+			"IE-16/25A",
+			"Taiwan",
+			"BG",
+			"Barbados",
+			"China Highest",
+			"GB G99-A",
+			"SE LV",
+			"Chile BT",
+			"Brazil 127Vac",
+			"Newzealand",
+			"IEEE1547 208Vac",
+			"IEEE1547 220Vac",
+			"IEEE1547 240Vac",
+			"60Hz 127Vac Default",
+			"50Hz 127Vac Default",
+			"Australia WAPN",
+			"Australia MicroGrid",
+			"JP 50Hz",
+			"JP 60Hz",
+			"India Higher",
+			"DEWA LV",
+			"DEWA MV",
+			"SK",
+			"NZ GreenGrid",
+			"HU",
+			"Sri Lanka",
+			"ES island",
+			"Ergon30K",
+			"Energex30K",
+			"IEEE1547 230/400Vac",
+			"IEC61727 60Hz",
+			"CH",
+			"IT CEI 0-16",
+			"Australia Horizon",
+			"CY",
+			"Australia SAPN",
+			"Australia Ausgrid",
+			"Australia Essential",
+			"Australia Victoria",
+			"Hong Kong",
+			"PL MV",
+			"NL-B",
+			"SE MV",
+			"DE MV",
+			"DE LV without PV",
+			"ES-D",
+			"Australia Endeavour",
+			"Argentina",
+			"Israel LV",
+			"IEC61727 50Hz",
+			"Australia B",
+			"Australia C",
+			"Chile MT-A",
+			"Chile MT-B",
+			"Vietnam",
+			"reserve14",
+			"Israel-HV",
+			"",
+			"NewZealand:2015",
+			"RO-D",
+			"",
+			"US 208Vac Default",
+			"US 240Vac Default",
+			"US CA 208Vac",
+			"US CA 240Vac",
+			"cUSA_208VacCA_SDGE",
+			"cUSA_240VacCA_SDGE",
+			"cUSA_208VacCA_PGE",
+			"cUSA_240VacCA_PGE",
+			"US HI 208Vac",
+			"US HI 240Vac",
+			"USA_208VacHECO_14HM",
+			"USA_240VacHECO_14HM",
+			"US 480Vac",
+			"US CA 480Vac",
+			"US HI 480Vac",
+			"US Kauai 208Vac",
+			"US Kauai 240Vac",
+			"US Kauai 480Vac",
+			"US ISO-NE 208Vac",
+			"US ISO-NE 240Vac",
+			"US ISO-NE 480Vac",
+			"",
+			"PR 208Vac",
+			"PR 240Vac",
+			"PR 480Vac",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"Poland_B",
+			"EE",
+		],
+	}
+
 }
+
 
 module.exports = {
 	GoodWePacket,
