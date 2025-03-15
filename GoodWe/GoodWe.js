@@ -542,7 +542,7 @@ class GoodWeUdp {
 					this.#runningData.PowerHouseConsumptionPv.Value = this.#runningData.PowerAllPv.Value + this.#runningData.Battery1.Power.Value;
 					this.#runningData.PowerHouseConsumptionPv.Unit = "W";
 
-					this.#runningData.PowerHouseConsumptionAC.Value = this.#runningData.PowerAllPv.Value + this.#runningData.Battery1.Power.Value - this.#runningData.PowerActiveAC.Value;
+					this.#runningData.PowerHouseConsumptionAC.Value = this.#runningData.PowerBackUpLine.Value + this.#runningData.PowerGridLine.Value;
 					this.#runningData.PowerHouseConsumptionAC.Unit = "W";
 
 					this.#status = GoodWeUdp.ConStatus.Online;
