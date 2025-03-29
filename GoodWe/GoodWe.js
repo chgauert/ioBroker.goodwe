@@ -211,6 +211,9 @@ class GoodweBmSInfo {
 	MinCellTemperature = 0.0;
 	MaxCellVoltage = 0.0;
 	MinCellVoltage = 0.0;
+	EnergyBatteryChargeTotal = new PowerParameters();
+	EnergyBatteryDischargeTotal = new PowerParameters();
+	SerialNumber = "";
 }
 
 class GoodWeUdp {
@@ -635,7 +638,7 @@ class GoodWeUdp {
 		sendbuf[2] = 0x90;
 		sendbuf[3] = 0x8a;
 		sendbuf[4] = 0x00;
-		sendbuf[5] = 0x16;
+		sendbuf[5] = 0x43;
 
 		crc = this.#CalculatetCrc16(sendbuf, 0, 6);
 
@@ -673,6 +676,13 @@ class GoodWeUdp {
 					this.#bmsInfo.MinCellTemperature = this.#GetUintFromByteArray(rcvbuf, 43, 2) / 10;
 					this.#bmsInfo.MaxCellVoltage = this.#GetUintFromByteArray(rcvbuf, 45, 2) / 1000;
 					this.#bmsInfo.MinCellVoltage = this.#GetUintFromByteArray(rcvbuf, 47, 2) / 1000;
+
+					this.#bmsInfo.EnergyBatteryChargeTotal.Value = this.#GetUintFromByteArray(rcvbuf, 113, 4) / 10;
+					this.#bmsInfo.EnergyBatteryChargeTotal.Unit = "kWh";
+					this.#bmsInfo.EnergyBatteryDischargeTotal.Value = this.#GetUintFromByteArray(rcvbuf, 117, 4) / 10;
+					this.#bmsInfo.EnergyBatteryDischargeTotal.Unit = "kWh";
+
+					this.#bmsInfo.SerialNumber = this.#GetStringFromByteArray(rcvbuf, 121, 18);
 
 					this.#status = GoodWeUdp.ConStatus.Online;
 				} else {
