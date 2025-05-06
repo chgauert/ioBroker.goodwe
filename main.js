@@ -233,8 +233,8 @@ class Goodwe extends utils.Adapter {
 		this.CreateObjectStateNumber("BMSInfo", "MinCellTemperature");
 		this.CreateObjectStateNumber("BMSInfo", "MaxCellVoltage");
 		this.CreateObjectStateNumber("BMSInfo", "MinCellVoltage");
-		this.CreateObjectPowerParameters("BMSInfo", "EnergyBatteryChargeTotal");
-		this.CreateObjectPowerParameters("BMSInfo", "EnergyBatteryDischargeTotal");
+		this.CreateObjectPowerParameters("BMSInfo", "EnergyBatteryChargedTotal");
+		this.CreateObjectPowerParameters("BMSInfo", "EnergyBatteryDischargedTotal");
 		this.CreateObjectStateString("BMSInfo", "SerialNumber");
 	}
 
@@ -783,12 +783,12 @@ class Goodwe extends utils.Adapter {
 		this.setStateAsync("BMSInfo.MaxCellVoltage", this.inverter.BmsInfo.MaxCellVoltage, true);
 		this.setStateAsync("BMSInfo.MinCellVoltage", this.inverter.BmsInfo.MinCellVoltage, true);
 
-		this.setStateAsync("BMSInfo.EnergyBatteryChargeTotal.Value", this.inverter.BmsInfo.EnergyBatteryChargeTotal.Value, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryChargeTotal.Unit", this.inverter.BmsInfo.EnergyBatteryChargeTotal.Unit, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryChargeTotal.ValueAsString", this.inverter.BmsInfo.EnergyBatteryChargeTotal.ValueAsString, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryDischargeTotal.Value", this.inverter.BmsInfo.EnergyBatteryDischargeTotal.Value, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryDischargeTotal.Unit", this.inverter.BmsInfo.EnergyBatteryDischargeTotal.Unit, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryDischargeTotal.ValueAsString", this.inverter.BmsInfo.EnergyBatteryDischargeTotal.ValueAsString, true);
+		this.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.Value", this.inverter.BmsInfo.EnergyBatteryChargedTotal.Value, true);
+		this.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.Unit", this.inverter.BmsInfo.EnergyBatteryChargedTotal.Unit, true);
+		this.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.ValueAsString", this.inverter.BmsInfo.EnergyBatteryChargedTotal.ValueAsString, true);
+		this.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.Value", this.inverter.BmsInfo.EnergyBatteryDischargedTotal.Value, true);
+		this.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.Unit", this.inverter.BmsInfo.EnergyBatteryDischargedTotal.Unit, true);
+		this.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.ValueAsString", this.inverter.BmsInfo.EnergyBatteryDischargedTotal.ValueAsString, true);
 		this.setStateAsync("BMSInfo.SerialNumber", this.inverter.BmsInfo.SerialNumber, true);
 	}
 

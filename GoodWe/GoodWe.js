@@ -211,8 +211,8 @@ class GoodweBmSInfo {
 	MinCellTemperature = 0.0;
 	MaxCellVoltage = 0.0;
 	MinCellVoltage = 0.0;
-	EnergyBatteryChargeTotal = new PowerParameters();
-	EnergyBatteryDischargeTotal = new PowerParameters();
+	EnergyBatteryChargedTotal = new PowerParameters();
+	EnergyBatteryDischargedTotal = new PowerParameters();
 	SerialNumber = "";
 }
 
@@ -676,12 +676,10 @@ class GoodWeUdp {
 					this.#bmsInfo.MinCellTemperature = this.#GetUintFromByteArray(rcvbuf, 43, 2) / 10;
 					this.#bmsInfo.MaxCellVoltage = this.#GetUintFromByteArray(rcvbuf, 45, 2) / 1000;
 					this.#bmsInfo.MinCellVoltage = this.#GetUintFromByteArray(rcvbuf, 47, 2) / 1000;
-
-					this.#bmsInfo.EnergyBatteryChargeTotal.Value = this.#GetUintFromByteArray(rcvbuf, 113, 4) / 10;
-					this.#bmsInfo.EnergyBatteryChargeTotal.Unit = "kWh";
-					this.#bmsInfo.EnergyBatteryDischargeTotal.Value = this.#GetUintFromByteArray(rcvbuf, 117, 4) / 10;
-					this.#bmsInfo.EnergyBatteryDischargeTotal.Unit = "kWh";
-
+					this.#bmsInfo.EnergyBatteryChargedTotal.Value = this.#GetUintFromByteArray(rcvbuf, 113, 4) / 10;
+					this.#bmsInfo.EnergyBatteryChargedTotal.Unit = "kWh";
+					this.#bmsInfo.EnergyBatteryDischargedTotal.Value = this.#GetUintFromByteArray(rcvbuf, 117, 4) / 10;
+					this.#bmsInfo.EnergyBatteryDischargedTotal.Unit = "kWh";
 					this.#bmsInfo.SerialNumber = this.#GetStringFromByteArray(rcvbuf, 121, 18);
 
 					this.#status = GoodWeUdp.ConStatus.Online;
