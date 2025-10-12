@@ -21,6 +21,13 @@
 			"request": "attach",
 			"address": "localhost",
 			"port": 9229
-		}
+		},
+		{
+			"name": "Attach by Process ID", // --> dev-server debug --wait
+			"processId": "${command:PickProcess}",
+			"request": "attach",
+			"skipFiles": ["<node_internals>/**"],
+			"type": "node"
+		}		
 	]
 }

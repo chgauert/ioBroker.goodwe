@@ -41,6 +41,7 @@ class Goodwe extends utils.Adapter {
 		this.CreateObjectsRunningData();
 		this.CreateObjectsExtComData();
 		this.CreateObjectsBmsInfo();
+		this.CreateObjectsControlParams();
 
 		// Reset the connection indicator during startup
 		this.setState("info.connection", false, true);
@@ -56,6 +57,11 @@ class Goodwe extends utils.Adapter {
 
 		result = await this.checkGroupAsync("admin", "admin");
 		this.log.info("check group user admin group admin: " + result);
+
+        // Alle eigenen States abonnieren		
+		const ctrlParamNamespace = this.namespace + ".ControlParameter.*";
+
+        await this.subscribeStatesAsync(ctrlParamNamespace);		
 	}
 
 	/**
@@ -79,8 +85,14 @@ class Goodwe extends utils.Adapter {
 	 */
 	onStateChange(id, state) {
 		if (state) {
-			// The state was changed
-			this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+			if (state.ack == true) {
+				// The state was changed by the adapter cyclic polling
+				return;
+			} else {
+				// The state was changed by user
+				this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+				this.WriteControlValue(id, state);
+			}
 		} else {
 			// The state was deleted
 			this.log.info(`state ${id} deleted`);
@@ -146,8 +158,8 @@ class Goodwe extends utils.Adapter {
 		this.CreateObjectStateNumber("RunningData", "NbusVoltage");
 		this.CreateObjectsDcParameters("RunningData", "Battery1");
 		this.CreateObjectStateNumber("RunningData", "WarningCode");
-		this.CreateObjectStateNumber("RunningData", "SaftyCountry");
-		this.CreateObjectStateString("RunningData", "SaftyCountryLabel");
+		this.CreateObjectStateNumber("RunningData", "SafetyCountry");
+		this.CreateObjectStateString("RunningData", "SafetyCountryLabel");
 		this.CreateObjectStateNumber("RunningData", "WorkMode");
 		this.CreateObjectStateString("RunningData", "WorkModeLabel");
 		this.CreateObjectStateNumber("RunningData", "OperationMode");
@@ -207,7 +219,7 @@ class Goodwe extends utils.Adapter {
 	CreateObjectsBmsInfo() {
 		this.setObjectNotExistsAsync("BMSInfo", {
 			type: "channel",
-			common: { name: "ExtComData" },
+			common: { name: "BMSInfo" },
 			native: {},
 		});
 	
@@ -237,6 +249,25 @@ class Goodwe extends utils.Adapter {
 		this.CreateObjectPowerParameters("BMSInfo", "EnergyBatteryDischargedTotal");
 		this.CreateObjectStateString("BMSInfo", "SerialNumber");
 	}
+
+	CreateObjectsControlParams() {
+		this.setObjectNotExistsAsync("ControlParameter", {
+			type: "channel",
+			common: { name: "ControlParameter" },
+			native: {},
+		});
+	
+		this.CreateObjectControlParam("ControlParameter", "ShadowScanEnabled");
+		this.CreateObjectControlParam("ControlParameter", "ShadowScanCycle");
+
+		this.CreateObjectControlParam("ControlParameter", "BattMinSOCOnGrid");
+		this.CreateObjectControlParam("ControlParameter", "BattMinSOCOffGrid");
+		this.CreateObjectControlParam("ControlParameter", "BackupSOCHoldingEnabled");		
+		this.CreateObjectControlParam("ControlParameter", "BackupSOCProtectionEnabled");		
+		
+		this.CreateObjectControlParam("ControlParameter", "FastChargeEnabled");
+		this.CreateObjectControlParam("ControlParameter", "FastChargeSOCStop");
+	}	
 
 	CreateObjectStateNumber(Path, Name) {
 		this.setObjectNotExistsAsync(Path + "." + Name, {
@@ -504,9 +535,71 @@ class Goodwe extends utils.Adapter {
 		});
 	}
 
-	UpdateDeviceInfo() {
-		this.inverter.ReadDeviceInfo();
-	
+	CreateObjectControlParam(Path, Name) {
+		this.setObjectNotExistsAsync(Path + "." + Name, {
+			type: "channel",
+			common: { name: "Name" },
+			native: {},
+		});
+
+		this.setObjectNotExistsAsync(Path + "." + Name + ".Register", {
+			type: "state",
+			common: {
+				name: "Register",
+				type: "number",
+				role: "value",
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+
+		this.setObjectNotExistsAsync(Path + "." + Name + ".Value", {
+			type: "state",
+			common: {
+				name: "Value",
+				type: "number",
+				role: "value",
+				read: true,
+				write: true,
+			},
+			native: {},
+		});
+
+		this.setObjectNotExistsAsync(Path + "." + Name + ".Unit", {
+			type: "state",
+			common: {
+				name: "Unit",
+				type: "string",
+				role: "text",
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+
+		this.setObjectNotExistsAsync(Path + "." + Name + ".ValueAsString", {
+			type: "state",
+			common: {
+				name: "ValueAsString",
+				type: "string",
+				role: "text",
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+	}
+
+	async UpdateDeviceInfo() {
+		await this.inverter.ReadDeviceInfo()
+		.catch((ex) => {
+
+			if(ex != "Timeout") {
+				this.log.error("UpdateDeviceInfo returned error -> " + ex)
+			}
+		});
+
 		this.setStateAsync("DeviceInfo.ModbusProtocolVersion", this.inverter.DeviceInfo.ModbusProtocolVersion, true);
 		this.setStateAsync("DeviceInfo.RatedPower", this.inverter.DeviceInfo.RatedPower, true);
 		this.setStateAsync("DeviceInfo.AcOutputType", this.inverter.DeviceInfo.AcOutputType, true);
@@ -523,9 +616,15 @@ class Goodwe extends utils.Adapter {
 		this.setStateAsync("info.connection", this.inverter.Status, true);
 	}
 
-	UpdateRunningData() {
-		this.inverter.ReadRunningData();
-	
+	async UpdateRunningData() {
+		await this.inverter.ReadRunningData()
+		.catch((ex) => {
+
+			if(ex != "Timeout") {
+				this.log.error("UpdateRunningData returned error -> " + ex)
+			}
+		});
+
 		this.setStateAsync("RunningData.PV1.Voltage", this.inverter.RunningData.Pv1.Voltage, true);
 		this.setStateAsync("RunningData.PV1.Current", this.inverter.RunningData.Pv1.Current, true);
 		this.setStateAsync("RunningData.PV1.Power.Value", this.inverter.RunningData.Pv1.Power.Value, true);
@@ -653,8 +752,8 @@ class Goodwe extends utils.Adapter {
 		this.setStateAsync("RunningData.Battery1.ModeLabel", this.inverter.RunningData.Battery1.ModeLabel, true);
 
 		this.setStateAsync("RunningData.WarningCode", this.inverter.RunningData.WarningCode, true);
-		this.setStateAsync("RunningData.SaftyCountry", this.inverter.RunningData.SaftyCountry, true);
-		this.setStateAsync("RunningData.SaftyCountryLabel", this.inverter.RunningData.SaftyCountryLabel, true);
+		this.setStateAsync("RunningData.SafetyCountry", this.inverter.RunningData.SafetyCountry, true);
+		this.setStateAsync("RunningData.SafetyCountryLabel", this.inverter.RunningData.SafetyCountryLabel, true);
 		this.setStateAsync("RunningData.WorkMode", this.inverter.RunningData.WorkMode, true);
 		this.setStateAsync("RunningData.WorkModeLabel", this.inverter.RunningData.WorkModeLabel, true);
 		this.setStateAsync("RunningData.OperationMode", this.inverter.RunningData.OperationMode, true);
@@ -731,9 +830,15 @@ class Goodwe extends utils.Adapter {
 
 	}
 	
-	UpdateExtComData() {
-		this.inverter.ReadExtComData();
-	
+	async UpdateExtComData() {
+		await this.inverter.ReadExtComData()
+		.catch((ex) => {
+
+			if(ex != "Timeout") {
+				this.log.error("UpdateExtComData returned error -> " + ex)
+			}
+		});
+
 		this.setStateAsync("ExtComData.Commode", this.inverter.ExtComData.Commode, true);
 		this.setStateAsync("ExtComData.Rssi", this.inverter.ExtComData.Rssi, true);
 		this.setStateAsync("ExtComData.ManufacturerCode", this.inverter.ExtComData.ManufacturerCode, true);
@@ -757,9 +862,15 @@ class Goodwe extends utils.Adapter {
 		this.setStateAsync("ExtComData.EnergyTotalBuy.ValueAsString", this.inverter.ExtComData.EnergyTotalBuy.ValueAsString, true);
 	}
 	
-	UpdateBmsInfo() {
-		this.inverter.ReadBmsInfo();
-	
+	async UpdateBmsInfo() {
+		await this.inverter.ReadBmsInfo()
+              .catch((ex) => {
+
+					if(ex != "Timeout") {
+						this.log.error("UpdateBmsInfo returned error -> " + ex)
+					}
+				});
+
 		this.setStateAsync("BMSInfo.Status", this.inverter.BmsInfo.Status, true);
 		this.setStateAsync("BMSInfo.PackTemperature", this.inverter.BmsInfo.PackTemperature, true);
 		this.setStateAsync("BMSInfo.MaxChargeCurrent", this.inverter.BmsInfo.MaxChargeCurrent, true);
@@ -792,7 +903,77 @@ class Goodwe extends utils.Adapter {
 		this.setStateAsync("BMSInfo.SerialNumber", this.inverter.BmsInfo.SerialNumber, true);
 	}
 
-	myTimer() {	
+	async UpdateControlParamsBlock1() {
+		await this.inverter.ReadControlDataBlock1()
+		.catch((ex) => {
+
+			if(ex != "Timeout") {
+				this.log.error("UpdateControlParamsBlock1 returned error -> " + ex)
+			}
+		});
+
+		this.setStateAsync("ControlParameter.ShadowScanEnabled.Register", this.inverter.ControlParameter.ShadowScanEnabled.Register, true);
+		this.setStateAsync("ControlParameter.ShadowScanEnabled.Value", this.inverter.ControlParameter.ShadowScanEnabled.Value, true);
+		this.setStateAsync("ControlParameter.ShadowScanEnabled.Unit", this.inverter.ControlParameter.ShadowScanEnabled.Unit, true);
+		this.setStateAsync("ControlParameter.ShadowScanEnabled.ValueAsString", this.inverter.ControlParameter.ShadowScanEnabled.ValueAsString, true);
+
+		this.setStateAsync("ControlParameter.ShadowScanCycle.Register", this.inverter.ControlParameter.ShadowScanCycle.Register, true);
+		this.setStateAsync("ControlParameter.ShadowScanCycle.Value", this.inverter.ControlParameter.ShadowScanCycle.Value, true);
+		this.setStateAsync("ControlParameter.ShadowScanCycle.Unit", this.inverter.ControlParameter.ShadowScanCycle.Unit, true);
+		this.setStateAsync("ControlParameter.ShadowScanCycle.ValueAsString", this.inverter.ControlParameter.ShadowScanCycle.ValueAsString, true);
+	}
+
+	async UpdateControlParamsBlock2() {
+		await this.inverter.ReadControlDataBlock2()
+		.catch((ex) => {
+
+			if(ex != "Timeout") {
+				this.log.error("UpdateControlParamsBlock2 returned error -> " + ex)
+			}
+		});
+
+		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.Register", this.inverter.ControlParameter.BattMinSOCOnGrid.Register, true);
+		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.Value", this.inverter.ControlParameter.BattMinSOCOnGrid.Value, true);
+		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.Unit", this.inverter.ControlParameter.BattMinSOCOnGrid.Unit, true);
+		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.ValueAsString", this.inverter.ControlParameter.BattMinSOCOnGrid.ValueAsString, true);
+
+		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.Register", this.inverter.ControlParameter.BattMinSOCOffGrid.Register, true);
+		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.Value", this.inverter.ControlParameter.BattMinSOCOffGrid.Value, true);
+		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.Unit", this.inverter.ControlParameter.BattMinSOCOffGrid.Unit, true);
+		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.ValueAsString", this.inverter.ControlParameter.BattMinSOCOffGrid.ValueAsString, true);
+	}
+	
+	async UpdateControlParamsBlock3() {
+		await this.inverter.ReadControlDataBlock3()
+		.catch((ex) => {
+
+			if(ex != "Timeout") {
+				this.log.error("UpdateControlParamsBlock3 returned error -> " + ex)
+			}
+		});
+
+		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.Register", this.inverter.ControlParameter.BackupSOCProtectionEnabled.Register, true);
+		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.Value", this.inverter.ControlParameter.BackupSOCProtectionEnabled.Value, true);
+		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.Unit", this.inverter.ControlParameter.BackupSOCProtectionEnabled.Unit, true);
+		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.ValueAsString", this.inverter.ControlParameter.BackupSOCProtectionEnabled.ValueAsString, true);
+
+		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Register", this.inverter.ControlParameter.BackupSOCHoldingEnabled.Register, true);
+		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Value", this.inverter.ControlParameter.BackupSOCHoldingEnabled.Value, true);
+		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Unit", this.inverter.ControlParameter.BackupSOCHoldingEnabled.Unit, true);
+		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.ValueAsString", this.inverter.ControlParameter.BackupSOCHoldingEnabled.ValueAsString, true);
+
+		this.setStateAsync("ControlParameter.FastChargeEnabled.Register", this.inverter.ControlParameter.FastChargeEnabled.Register, true);
+		this.setStateAsync("ControlParameter.FastChargeEnabled.Value", this.inverter.ControlParameter.FastChargeEnabled.Value, true);
+		this.setStateAsync("ControlParameter.FastChargeEnabled.Unit", this.inverter.ControlParameter.FastChargeEnabled.Unit, true);
+		this.setStateAsync("ControlParameter.FastChargeEnabled.ValueAsString", this.inverter.ControlParameter.FastChargeEnabled.ValueAsString, true);
+
+		this.setStateAsync("ControlParameter.FastChargeSOCStop.Register", this.inverter.ControlParameter.FastChargeSOCStop.Register, true);
+		this.setStateAsync("ControlParameter.FastChargeSOCStop.Value", this.inverter.ControlParameter.FastChargeSOCStop.Value, true);
+		this.setStateAsync("ControlParameter.FastChargeSOCStop.Unit", this.inverter.ControlParameter.FastChargeSOCStop.Unit, true);
+		this.setStateAsync("ControlParameter.FastChargeSOCStop.ValueAsString", this.inverter.ControlParameter.FastChargeSOCStop.ValueAsString, true);
+	}
+
+	async myTimer() {	
 		if (this.inverter.Status == false) {
 			this.cycleCnt = 0;
 			this.inverter.ReadIdInfo();
@@ -800,21 +981,27 @@ class Goodwe extends utils.Adapter {
 		
 			switch (this.cycleCnt) {
 				case 1:
-					this.UpdateDeviceInfo();
+					await this.UpdateDeviceInfo();
 					//this.log.info("Goodwe update");
 					break;
-
 				case 3:
-					this.UpdateRunningData();
+					await this.UpdateRunningData();
 					break;
-
 				case 5:
-					this.UpdateExtComData();
+					await this.UpdateExtComData();
 					break;
-
 				case 7:
-					this.UpdateBmsInfo();
+					await this.UpdateBmsInfo();
 					break;
+				case 9:
+					await this.UpdateControlParamsBlock1();
+					break;				
+				case 11:
+					await this.UpdateControlParamsBlock2();
+					break;				
+				case 13:
+					await this.UpdateControlParamsBlock3();
+					break;				
 			}
 
 			// @ts-ignore
@@ -827,6 +1014,37 @@ class Goodwe extends utils.Adapter {
 
 		tmr_timeout = this.setTimeout(() => this.myTimer(), 1000);
 	}
+
+	async WriteControlValue(id, state) {
+
+		if(id.endsWith(".Value") == false) {
+			return;
+		}
+		const idRegister = id.replace(".Value", ".Register");
+
+		let valRegister = await this.getStateAsync(idRegister);
+
+		let Param = this.inverter.ControlParameter.GetParameterForRegister(valRegister?.val);
+		if( Param == null) {
+			return;
+		}
+
+		Param.Value = state.val;
+
+		await this.inverter.WriteControlParameter(Param)
+              .catch((ex) => {
+                  if(ex != "Timeout") {
+                      this.log.error("WriteControlParameter: writing data for register " + Param.Register + " returned error -> " + ex);
+                  }
+               });
+
+        await this.inverter.ReadControlParameter(Param)
+              .catch((ex) => {
+                  if(ex != "Timeout") {
+                      this.log.error("ReadControlParameter: reading data for register " + Param.Register + " returned error -> " + ex);
+                  }
+               });
+	}	
 }
 
 if (require.main !== module) {
@@ -839,3 +1057,4 @@ if (require.main !== module) {
 	// otherwise start the instance directly
 	new Goodwe();
 }
+//# sourceMappingURL=main.js.map

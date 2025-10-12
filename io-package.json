@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "goodwe",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "news": {
+      "1.0.6": {
+        "en": "(Christian Gauert) Added control parameters and option to write them",
+        "de": "(Christian Gauert) Control Parameter und Möglichkeit zum Schreiben ergänzt",
+        "ru": "(Christian Gauert) Added control parameters and option to write them",
+        "pt": "(Christian Gauert) Added control parameters and option to write them",
+        "nl": "(Christian Gauert) Added control parameters and option to write them",
+        "fr": "(Christian Gauert) Added control parameters and option to write them",
+        "it": "(Christian Gauert) Added control parameters and option to write them",
+        "es": "(Christian Gauert) Added control parameters and option to write them",
+        "pl": "(Christian Gauert) Added control parameters and option to write them",
+        "uk": "(Christian Gauert) Added control parameters and option to write them",
+        "zh-cn": "(Christian Gauert) Added control parameters and option to write them"
+      },      
       "1.0.5": {
         "en": "(Christian Gauert) Added several modifications based on python goodwe library",
         "de": "(Christian Gauert) Änderungen basierend auf python goodwe Bibliothek",
@@ -123,7 +136,8 @@
       "uk": "Зв'язок із інверторами GoodWe серії ET/EH/BH/BT"
     },
     "authors": [
-      "Thomas Schönberger <SchoenbergerThomas@freenet.de>"
+      "Thomas Schönberger <SchoenbergerThomas@freenet.de>",
+      "chg <chgauert@gmx.de>"
     ],
     "keywords": [
       "GoodWe",
