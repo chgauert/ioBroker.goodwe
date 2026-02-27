@@ -193,16 +193,16 @@ class GoodweBmSInfo {
 }
 
 class GoodweControlParams {
-    ShadowScanEnabled = new ControlParameter(45251, 1, 1, 1, "");
-	ShadowScanCycle = new ControlParameter(45295, 1, 1, 1, "min");
+    ShadowScanEnabled = new ControlParameter(45251, 1, 1, 1, "", "ShadowScan Enabled");
+	ShadowScanCycle = new ControlParameter(45295, 1, 1, 1, "min", "ShadowScan Cycle");
 
-    BattMinSOCOnGrid = new ControlParameter(45356, 1, 1, 1, "%");
-	BattMinSOCOffGrid = new ControlParameter(45358, 1, 1, 1, "%");
-	SOCProtectionDisabled = new ControlParameter(47500, 1, 1, 1, "");
-	BackupSOCHoldingEnabled = new ControlParameter(47602, 1, 1, 1, "");
+    BattMinSOCOnGrid = new ControlParameter(45356, 1, 1, 1, "%", "Min-SOC OnGrid");
+	BattMinSOCOffGrid = new ControlParameter(45358, 1, 1, 1, "%", "Min-SOC OffGrid");
+	SOCProtectionDisabled = new ControlParameter(47500, 1, 1, 1, "", "SOC Protection");
+	BackupSOCHoldingEnabled = new ControlParameter(47602, 1, 1, 1, "", "Backup SOC-Holding");
 
-	FastChargeEnabled = new ControlParameter(47545, 1, 1, 1, "");
-	FastChargeSOCStop = new ControlParameter(47546, 1, 1, 1, "%");
+	FastChargeEnabled = new ControlParameter(47545, 1, 1, 1, "", "FastCharge Enabled");
+	FastChargeSOCStop = new ControlParameter(47546, 1, 1, 1, "%", "FastCharge Stop-SOC");
 
 	GetParameterForRegister(Register) {
 
@@ -277,7 +277,7 @@ class ACPhaseBackup {
 }
 
 class ControlParameter {
-	constructor(Register, Count, Type, Factor, Unit)
+	constructor(Register, Count, Type, Factor, Unit, Name)
 	{
 		this.Register = Register;
 		this.RegisterCount = Count;     // 1 = UInt16 register, 2 = UInt32 register
@@ -287,7 +287,9 @@ class ControlParameter {
 		this.Value = 0;
 		this.Unit = Unit;
 	
-		this.IsValid = false;	
+		this.IsValid = false;
+
+		this.Name = Name;
 	}
 	get ValueAsString() {
 		return this.Value + " " + this.Unit;
@@ -773,7 +775,7 @@ class GoodWeUdp {
 		// alle gleich lang sind (1 Register, 2 Byte lang)
 
 		// read data for ShadowScanEnabled (45251) and ShadowScanCycle (45295)
-		let dataBlock1 = new ControlParameter(45220, 76, 1, 1, "");
+		let dataBlock1 = new ControlParameter(45220, 76, 1, 1, "", "ReadControlDataBlock1");
 
 		this.ReadControlParameter("ShadowScanData", dataBlock1, AdapterInstance, AdapterUpdateCallback);
 	}
@@ -785,7 +787,7 @@ class GoodWeUdp {
 		// alle gleich lang sind (1 Register, 2 Byte lang)
 
 		// read data for BattMinSOCOnGrid (45356) and BattMinSOCOffGrid (45358)
-		let dataBlock2 = new ControlParameter(45350, 9, 1, 1, "");
+		let dataBlock2 = new ControlParameter(45350, 9, 1, 1, "", "ReadControlDataBlock2");
 
 		this.ReadControlParameter("BatteryMinSOCData", dataBlock2, AdapterInstance, AdapterUpdateCallback);
 	}
@@ -798,7 +800,7 @@ class GoodWeUdp {
 
 		// read data for SOCProtectionDisabled (47500), FastChargeEnabled(47545), 
 		// FastChargeSOCStop (47546) and BackupSOCHoldingEnabled (47602)
-		let dataBlock3 = new ControlParameter(47500, 103, 1, 1, "");
+		let dataBlock3 = new ControlParameter(47500, 103, 1, 1, "", "ReadControlDataBlock3");
 
 		this.ReadControlParameter("FastChargeData", dataBlock3, AdapterInstance, AdapterUpdateCallback);
 	}
@@ -857,7 +859,7 @@ class GoodWeUdp {
 			sendbuf[6] = crc >> 8;
 			sendbuf[7] = crc & 0x00ff;	
 
-			udpReqType = new UDPRequestType(Param.Register.ToString(), GoodWeRegister.FunctionCode.WriteSingleRegister,firstRegister, registerCount, 
+			udpReqType = new UDPRequestType(Param.Name, GoodWeRegister.FunctionCode.WriteSingleRegister,firstRegister, registerCount, 
 											this.WriteControlParamDone, sendbuf, null, null, Param);
 			this.#AddUDPRequestType(udpReqType);
 		} else {
@@ -887,7 +889,7 @@ class GoodWeUdp {
 			sendbuf[nArrayLen-2] = crc >> 8;
 			sendbuf[nArrayLen-1] = crc & 0x00ff;
 
-			udpReqType = new UDPRequestType(Param.Register.ToString(), GoodWeRegister.FunctionCode.WriteMultipleRegister, firstRegister, registerCount, 
+			udpReqType = new UDPRequestType(Param.Name, GoodWeRegister.FunctionCode.WriteMultipleRegister, firstRegister, registerCount, 
 											this.WriteControlParamDone, sendbuf, null, null, Param);
 			this.#AddUDPRequestType(udpReqType);			
 		}	

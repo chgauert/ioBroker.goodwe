@@ -21,6 +21,8 @@ Communication with GoodWe Inverter ET/EH/BH/BT Series
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.0.8 (2026-02-27)
+* (Christian Gauert) Bugfix
 ### 1.0.7 (2026-02-27)
 * (Christian Gauert) Changed methods reading data from the inverter
 ### 1.0.6 (2025-10-12)

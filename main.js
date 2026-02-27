@@ -1034,7 +1034,7 @@ class Goodwe extends utils.Adapter {
 
 		this.inverter.WriteControlParameter(Param);
 
-		this.inverter.ReadControlParameter(idRegister.ToStirng(), Param, null, null);
+		this.inverter.ReadControlParameter(Param.Name, Param, null, null);
 	}	
 }
 
