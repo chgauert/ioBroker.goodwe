@@ -1,6 +1,6 @@
 {
   "name": "iobroker.goodwe",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Communication with GoodWe Inverter ET/EH/BH/BT Series",
   "author": {
     "name": "Thomas Schönberger",
@@ -9,7 +9,7 @@
   "contributors": [
     "chg <chgauert@gmx.de>"
   ],
-  "homepage": "https://github.com/FossyTom/ioBroker.goodwe",
+  "homepage": "https://github.com/chgauert/ioBroker.goodwe",
   "license": "MIT",
   "keywords": [
     "GoodWe",
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:FossyTom/ioBroker.goodwe.git"
+    "url": "git@github.com:chgauert/ioBroker.goodwe.git"
   },
   "engines": {
     "node": ">= 14"
@@ -82,7 +82,7 @@
     "dev-server": "dev-server"
   },
   "bugs": {
-    "url": "https://github.com/FossyTom/ioBroker.goodwe/issues"
+    "url": "https://github.com/chgauert/ioBroker.goodwe/issues"
   },
   "readmeFilename": "README.md"
 }

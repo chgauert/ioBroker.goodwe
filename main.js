@@ -47,7 +47,7 @@ class Goodwe extends utils.Adapter {
 		this.setState("info.connection", false, true);
 
 		// @ts-ignore
-		this.inverter.Connect(this.config.ipAddr, 8899);
+		this.inverter.Connect(this.config.ipAddr, 8899, this);
 
 		this.myTimer();
 		
@@ -263,7 +263,7 @@ class Goodwe extends utils.Adapter {
 		this.CreateObjectControlParam("ControlParameter", "BattMinSOCOnGrid");
 		this.CreateObjectControlParam("ControlParameter", "BattMinSOCOffGrid");
 		this.CreateObjectControlParam("ControlParameter", "BackupSOCHoldingEnabled");		
-		this.CreateObjectControlParam("ControlParameter", "BackupSOCProtectionEnabled");		
+		this.CreateObjectControlParam("ControlParameter", "SOCProtectionDisabled");		
 		
 		this.CreateObjectControlParam("ControlParameter", "FastChargeEnabled");
 		this.CreateObjectControlParam("ControlParameter", "FastChargeSOCStop");
@@ -591,416 +591,417 @@ class Goodwe extends utils.Adapter {
 		});
 	}
 
-	async UpdateDeviceInfo() {
-		await this.inverter.ReadDeviceInfo()
-		.catch((ex) => {
+	UpdateDeviceInfo(AdapterInstance) {
+/*
+		try {
+			await this.inverter.ReadDeviceInfo(this);
+			this.log.debug("UpdateDeviceInfo new data received");
+		}
+		catch(ex) {
+			this.log.error("UpdateDeviceInfo returned error -> " + ex);
+			return;
+		}
+*/
+		if(AdapterInstance == null) {
+			return;
+		}
 
-			if(ex != "Timeout") {
-				this.log.error("UpdateDeviceInfo returned error -> " + ex)
-			}
-		});
+		AdapterInstance.log.debug("UpdateDeviceInfo new data received");
 
-		this.setStateAsync("DeviceInfo.ModbusProtocolVersion", this.inverter.DeviceInfo.ModbusProtocolVersion, true);
-		this.setStateAsync("DeviceInfo.RatedPower", this.inverter.DeviceInfo.RatedPower, true);
-		this.setStateAsync("DeviceInfo.AcOutputType", this.inverter.DeviceInfo.AcOutputType, true);
-		this.setStateAsync("DeviceInfo.SerialNumber", this.inverter.DeviceInfo.SerialNumber, true);
-		this.setStateAsync("DeviceInfo.DeviceType", this.inverter.DeviceInfo.DeviceType, true);
-		this.setStateAsync("DeviceInfo.DSP1_SW_Version", this.inverter.DeviceInfo.DSP1_SoftwareVersion, true);
-		this.setStateAsync("DeviceInfo.DSP2_SW_Version", this.inverter.DeviceInfo.DSP2_SoftwareVersion, true);
-		this.setStateAsync("DeviceInfo.DSP_SVN_Version", this.inverter.DeviceInfo.DSP_SVN_Version, true);
-		this.setStateAsync("DeviceInfo.ARM_SW_Version", this.inverter.DeviceInfo.ARM_SoftwareVersion, true);
-		this.setStateAsync("DeviceInfo.ARM_SVN_Version", this.inverter.DeviceInfo.ARM_SVN_Version, true);
-		this.setStateAsync("DeviceInfo.DSP_Int_FW_Version", this.inverter.DeviceInfo.DSP_IntFirmwareVersion, true);
-		this.setStateAsync("DeviceInfo.ARM_Int_FW_Version", this.inverter.DeviceInfo.ARM_IntFirmwareVersion, true);
+		AdapterInstance.setStateAsync("DeviceInfo.ModbusProtocolVersion", AdapterInstance.inverter.DeviceInfo.ModbusProtocolVersion, true);
+		AdapterInstance.setStateAsync("DeviceInfo.RatedPower", AdapterInstance.inverter.DeviceInfo.RatedPower, true);
+		AdapterInstance.setStateAsync("DeviceInfo.AcOutputType", AdapterInstance.inverter.DeviceInfo.AcOutputType, true);
+		AdapterInstance.setStateAsync("DeviceInfo.SerialNumber", AdapterInstance.inverter.DeviceInfo.SerialNumber, true);
+		AdapterInstance.setStateAsync("DeviceInfo.DeviceType", AdapterInstance.inverter.DeviceInfo.DeviceType, true);
+		AdapterInstance.setStateAsync("DeviceInfo.DSP1_SW_Version", AdapterInstance.inverter.DeviceInfo.DSP1_SoftwareVersion, true);
+		AdapterInstance.setStateAsync("DeviceInfo.DSP2_SW_Version", AdapterInstance.inverter.DeviceInfo.DSP2_SoftwareVersion, true);
+		AdapterInstance.setStateAsync("DeviceInfo.DSP_SVN_Version", AdapterInstance.inverter.DeviceInfo.DSP_SVN_Version, true);
+		AdapterInstance.setStateAsync("DeviceInfo.ARM_SW_Version", AdapterInstance.inverter.DeviceInfo.ARM_SoftwareVersion, true);
+		AdapterInstance.setStateAsync("DeviceInfo.ARM_SVN_Version", AdapterInstance.inverter.DeviceInfo.ARM_SVN_Version, true);
+		AdapterInstance.setStateAsync("DeviceInfo.DSP_Int_FW_Version", AdapterInstance.inverter.DeviceInfo.DSP_IntFirmwareVersion, true);
+		AdapterInstance.setStateAsync("DeviceInfo.ARM_Int_FW_Version", AdapterInstance.inverter.DeviceInfo.ARM_IntFirmwareVersion, true);
 	
-		this.setStateAsync("info.connection", this.inverter.Status, true);
+		AdapterInstance.setStateAsync("info.connection", AdapterInstance.inverter.Status, true);
 	}
 
-	async UpdateRunningData() {
-		await this.inverter.ReadRunningData()
-		.catch((ex) => {
+	UpdateRunningData(AdapterInstance) {
 
-			if(ex != "Timeout") {
-				this.log.error("UpdateRunningData returned error -> " + ex)
-			}
-		});
+		if(AdapterInstance == null) {
+			return;
+		}
 
-		this.setStateAsync("RunningData.PV1.Voltage", this.inverter.RunningData.Pv1.Voltage, true);
-		this.setStateAsync("RunningData.PV1.Current", this.inverter.RunningData.Pv1.Current, true);
-		this.setStateAsync("RunningData.PV1.Power.Value", this.inverter.RunningData.Pv1.Power.Value, true);
-		this.setStateAsync("RunningData.PV1.Power.Unit", this.inverter.RunningData.Pv1.Power.Unit, true);
-		this.setStateAsync("RunningData.PV1.Power.ValueAsString", this.inverter.RunningData.Pv1.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.PV1.Mode", this.inverter.RunningData.Pv1.Mode, true);
-		this.setStateAsync("RunningData.PV1.ModeLabel", this.inverter.RunningData.Pv1.ModeLabel, true);
+		AdapterInstance.log.debug("UpdateRunningData new data received");
 
-		this.setStateAsync("RunningData.PV2.Voltage", this.inverter.RunningData.Pv2.Voltage, true);
-		this.setStateAsync("RunningData.PV2.Current", this.inverter.RunningData.Pv2.Current, true);
-		this.setStateAsync("RunningData.PV2.Power.Value", this.inverter.RunningData.Pv2.Power.Value, true);
-		this.setStateAsync("RunningData.PV2.Power.Unit", this.inverter.RunningData.Pv2.Power.Unit, true);
-		this.setStateAsync("RunningData.PV2.Power.ValueAsString", this.inverter.RunningData.Pv2.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.PV2.Mode", this.inverter.RunningData.Pv2.Mode, true);
-		this.setStateAsync("RunningData.PV2.ModeLabel", this.inverter.RunningData.Pv2.ModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.Voltage", AdapterInstance.inverter.RunningData.Pv1.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.Current", AdapterInstance.inverter.RunningData.Pv1.Current, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.Power.Value", AdapterInstance.inverter.RunningData.Pv1.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.Power.Unit", AdapterInstance.inverter.RunningData.Pv1.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.Power.ValueAsString", AdapterInstance.inverter.RunningData.Pv1.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.Mode", AdapterInstance.inverter.RunningData.Pv1.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.PV1.ModeLabel", AdapterInstance.inverter.RunningData.Pv1.ModeLabel, true);
 
-		this.setStateAsync("RunningData.PV3.Voltage", this.inverter.RunningData.Pv3.Voltage, true);
-		this.setStateAsync("RunningData.PV3.Current", this.inverter.RunningData.Pv3.Current, true);
-		this.setStateAsync("RunningData.PV3.Power.Value", this.inverter.RunningData.Pv3.Power.Value, true);
-		this.setStateAsync("RunningData.PV3.Power.Unit", this.inverter.RunningData.Pv3.Power.Unit, true);
-		this.setStateAsync("RunningData.PV3.Power.ValueAsString", this.inverter.RunningData.Pv3.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.PV3.Mode", this.inverter.RunningData.Pv3.Mode, true);
-		this.setStateAsync("RunningData.PV3.ModeLabel", this.inverter.RunningData.Pv3.ModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.Voltage", AdapterInstance.inverter.RunningData.Pv2.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.Current", AdapterInstance.inverter.RunningData.Pv2.Current, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.Power.Value", AdapterInstance.inverter.RunningData.Pv2.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.Power.Unit", AdapterInstance.inverter.RunningData.Pv2.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.Power.ValueAsString", AdapterInstance.inverter.RunningData.Pv2.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.Mode", AdapterInstance.inverter.RunningData.Pv2.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.PV2.ModeLabel", AdapterInstance.inverter.RunningData.Pv2.ModeLabel, true);
 
-		this.setStateAsync("RunningData.PV4.Voltage", this.inverter.RunningData.Pv4.Voltage, true);
-		this.setStateAsync("RunningData.PV4.Current", this.inverter.RunningData.Pv4.Current, true);
-		this.setStateAsync("RunningData.PV4.Power.Value", this.inverter.RunningData.Pv4.Power.Value, true);
-		this.setStateAsync("RunningData.PV4.Power.Unit", this.inverter.RunningData.Pv4.Power.Unit, true);
-		this.setStateAsync("RunningData.PV4.Power.ValueAsString", this.inverter.RunningData.Pv4.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.PV4.Mode", this.inverter.RunningData.Pv4.Mode, true);
-		this.setStateAsync("RunningData.PV4.ModeLabel", this.inverter.RunningData.Pv4.ModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.Voltage", AdapterInstance.inverter.RunningData.Pv3.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.Current", AdapterInstance.inverter.RunningData.Pv3.Current, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.Power.Value", AdapterInstance.inverter.RunningData.Pv3.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.Power.Unit", AdapterInstance.inverter.RunningData.Pv3.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.Power.ValueAsString", AdapterInstance.inverter.RunningData.Pv3.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.Mode", AdapterInstance.inverter.RunningData.Pv3.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.PV3.ModeLabel", AdapterInstance.inverter.RunningData.Pv3.ModeLabel, true);
 
-		this.setStateAsync("RunningData.GridL1.Voltage", this.inverter.RunningData.GridL1.Voltage, true);
-		this.setStateAsync("RunningData.GridL1.Current", this.inverter.RunningData.GridL1.Current, true);
-		this.setStateAsync("RunningData.GridL1.Frequency", this.inverter.RunningData.GridL1.Frequency, true);
-		this.setStateAsync("RunningData.GridL1.Power.Value", this.inverter.RunningData.GridL1.Power.Value, true);
-		this.setStateAsync("RunningData.GridL1.Power.Unit", this.inverter.RunningData.GridL1.Power.Unit, true);
-		this.setStateAsync("RunningData.GridL1.Power.ValueAsString", this.inverter.RunningData.GridL1.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.Voltage", AdapterInstance.inverter.RunningData.Pv4.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.Current", AdapterInstance.inverter.RunningData.Pv4.Current, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.Power.Value", AdapterInstance.inverter.RunningData.Pv4.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.Power.Unit", AdapterInstance.inverter.RunningData.Pv4.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.Power.ValueAsString", AdapterInstance.inverter.RunningData.Pv4.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.Mode", AdapterInstance.inverter.RunningData.Pv4.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.PV4.ModeLabel", AdapterInstance.inverter.RunningData.Pv4.ModeLabel, true);
 
-		this.setStateAsync("RunningData.GridL2.Voltage", this.inverter.RunningData.GridL2.Voltage, true);
-		this.setStateAsync("RunningData.GridL2.Current", this.inverter.RunningData.GridL2.Current, true);
-		this.setStateAsync("RunningData.GridL2.Frequency", this.inverter.RunningData.GridL2.Frequency, true);
-		this.setStateAsync("RunningData.GridL2.Power.Value", this.inverter.RunningData.GridL2.Power.Value, true);
-		this.setStateAsync("RunningData.GridL2.Power.Unit", this.inverter.RunningData.GridL2.Power.Unit, true);
-		this.setStateAsync("RunningData.GridL2.Power.ValueAsString", this.inverter.RunningData.GridL2.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.GridL1.Voltage", AdapterInstance.inverter.RunningData.GridL1.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.GridL1.Current", AdapterInstance.inverter.RunningData.GridL1.Current, true);
+		AdapterInstance.setStateAsync("RunningData.GridL1.Frequency", AdapterInstance.inverter.RunningData.GridL1.Frequency, true);
+		AdapterInstance.setStateAsync("RunningData.GridL1.Power.Value", AdapterInstance.inverter.RunningData.GridL1.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.GridL1.Power.Unit", AdapterInstance.inverter.RunningData.GridL1.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.GridL1.Power.ValueAsString", AdapterInstance.inverter.RunningData.GridL1.Power.ValueAsString, true);
 
-		this.setStateAsync("RunningData.GridL3.Voltage", this.inverter.RunningData.GridL3.Voltage, true);
-		this.setStateAsync("RunningData.GridL3.Current", this.inverter.RunningData.GridL3.Current, true);
-		this.setStateAsync("RunningData.GridL3.Frequency", this.inverter.RunningData.GridL3.Frequency, true);
-		this.setStateAsync("RunningData.GridL3.Power.Value", this.inverter.RunningData.GridL3.Power.Value, true);
-		this.setStateAsync("RunningData.GridL3.Power.Unit", this.inverter.RunningData.GridL3.Power.Unit, true);
-		this.setStateAsync("RunningData.GridL3.Power.ValueAsString", this.inverter.RunningData.GridL3.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.GridL2.Voltage", AdapterInstance.inverter.RunningData.GridL2.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.GridL2.Current", AdapterInstance.inverter.RunningData.GridL2.Current, true);
+		AdapterInstance.setStateAsync("RunningData.GridL2.Frequency", AdapterInstance.inverter.RunningData.GridL2.Frequency, true);
+		AdapterInstance.setStateAsync("RunningData.GridL2.Power.Value", AdapterInstance.inverter.RunningData.GridL2.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.GridL2.Power.Unit", AdapterInstance.inverter.RunningData.GridL2.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.GridL2.Power.ValueAsString", AdapterInstance.inverter.RunningData.GridL2.Power.ValueAsString, true);
 
-		this.setStateAsync("RunningData.GridMode", this.inverter.RunningData.GridMode, true);
-		this.setStateAsync("RunningData.GridModeLabel", this.inverter.RunningData.GridModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.GridL3.Voltage", AdapterInstance.inverter.RunningData.GridL3.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.GridL3.Current", AdapterInstance.inverter.RunningData.GridL3.Current, true);
+		AdapterInstance.setStateAsync("RunningData.GridL3.Frequency", AdapterInstance.inverter.RunningData.GridL3.Frequency, true);
+		AdapterInstance.setStateAsync("RunningData.GridL3.Power.Value", AdapterInstance.inverter.RunningData.GridL3.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.GridL3.Power.Unit", AdapterInstance.inverter.RunningData.GridL3.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.GridL3.Power.ValueAsString", AdapterInstance.inverter.RunningData.GridL3.Power.ValueAsString, true);
 
-		this.setStateAsync("RunningData.PowerInverterOperation.Value", this.inverter.RunningData.PowerInverterOperation.Value, true);
-		this.setStateAsync("RunningData.PowerInverterOperation.Unit", this.inverter.RunningData.PowerInverterOperation.Unit, true);
-		this.setStateAsync("RunningData.PowerInverterOperation.ValueAsString", this.inverter.RunningData.PowerInverterOperation.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.GridMode", AdapterInstance.inverter.RunningData.GridMode, true);
+		AdapterInstance.setStateAsync("RunningData.GridModeLabel", AdapterInstance.inverter.RunningData.GridModeLabel, true);
 
-		this.setStateAsync("RunningData.PowerActiveAC.Value", this.inverter.RunningData.PowerActiveAC.Value, true);
-		this.setStateAsync("RunningData.PowerActiveAC.Unit", this.inverter.RunningData.PowerActiveAC.Unit, true);
-		this.setStateAsync("RunningData.PowerActiveAC.ValueAsString", this.inverter.RunningData.PowerActiveAC.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerInverterOperation.Value", AdapterInstance.inverter.RunningData.PowerInverterOperation.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerInverterOperation.Unit", AdapterInstance.inverter.RunningData.PowerInverterOperation.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerInverterOperation.ValueAsString", AdapterInstance.inverter.RunningData.PowerInverterOperation.ValueAsString, true);
 
-		this.setStateAsync("RunningData.PowerReactiveAC", this.inverter.RunningData.PowerReactiveAC, true);
-		this.setStateAsync("RunningData.PowerApparentAC", this.inverter.RunningData.PowerApparentAC, true);
+		AdapterInstance.setStateAsync("RunningData.PowerActiveAC.Value", AdapterInstance.inverter.RunningData.PowerActiveAC.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerActiveAC.Unit", AdapterInstance.inverter.RunningData.PowerActiveAC.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerActiveAC.ValueAsString", AdapterInstance.inverter.RunningData.PowerActiveAC.ValueAsString, true);
 
-		this.setStateAsync("RunningData.GridInOutModeLabel", this.inverter.RunningData.GridInOutModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.PowerReactiveAC", AdapterInstance.inverter.RunningData.PowerReactiveAC, true);
+		AdapterInstance.setStateAsync("RunningData.PowerApparentAC", AdapterInstance.inverter.RunningData.PowerApparentAC, true);
 
-		this.setStateAsync("RunningData.BackUpL1.Voltage", this.inverter.RunningData.BackUpL1.Voltage, true);
-		this.setStateAsync("RunningData.BackUpL1.Current", this.inverter.RunningData.BackUpL1.Current, true);
-		this.setStateAsync("RunningData.BackUpL1.Frequency", this.inverter.RunningData.BackUpL1.Frequency, true);
-		this.setStateAsync("RunningData.BackUpL1.Power.Value", this.inverter.RunningData.BackUpL1.Power.Value, true);
-		this.setStateAsync("RunningData.BackUpL1.Power.Unit", this.inverter.RunningData.BackUpL1.Power.Unit, true);
-		this.setStateAsync("RunningData.BackUpL1.Power.ValueAsString", this.inverter.RunningData.BackUpL1.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.BackUpL1.Mode", this.inverter.RunningData.BackUpL1.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.GridInOutModeLabel", AdapterInstance.inverter.RunningData.GridInOutModeLabel, true);
 
-		this.setStateAsync("RunningData.BackUpL2.Voltage", this.inverter.RunningData.BackUpL2.Voltage, true);
-		this.setStateAsync("RunningData.BackUpL2.Current", this.inverter.RunningData.BackUpL2.Current, true);
-		this.setStateAsync("RunningData.BackUpL2.Frequency", this.inverter.RunningData.BackUpL2.Frequency, true);
-		this.setStateAsync("RunningData.BackUpL2.Power.Value", this.inverter.RunningData.BackUpL2.Power.Value, true);
-		this.setStateAsync("RunningData.BackUpL2.Power.Unit", this.inverter.RunningData.BackUpL2.Power.Unit, true);
-		this.setStateAsync("RunningData.BackUpL2.Power.ValueAsString", this.inverter.RunningData.BackUpL2.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.BackUpL2.Mode", this.inverter.RunningData.BackUpL2.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Voltage", AdapterInstance.inverter.RunningData.BackUpL1.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Current", AdapterInstance.inverter.RunningData.BackUpL1.Current, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Frequency", AdapterInstance.inverter.RunningData.BackUpL1.Frequency, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Power.Value", AdapterInstance.inverter.RunningData.BackUpL1.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Power.Unit", AdapterInstance.inverter.RunningData.BackUpL1.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Power.ValueAsString", AdapterInstance.inverter.RunningData.BackUpL1.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL1.Mode", AdapterInstance.inverter.RunningData.BackUpL1.Mode, true);
 
-		this.setStateAsync("RunningData.BackUpL3.Voltage", this.inverter.RunningData.BackUpL3.Voltage, true);
-		this.setStateAsync("RunningData.BackUpL3.Current", this.inverter.RunningData.BackUpL3.Current, true);
-		this.setStateAsync("RunningData.BackUpL3.Frequency", this.inverter.RunningData.BackUpL3.Frequency, true);
-		this.setStateAsync("RunningData.BackUpL3.Power.Value", this.inverter.RunningData.BackUpL3.Power.Value, true);
-		this.setStateAsync("RunningData.BackUpL3.Power.Unit", this.inverter.RunningData.BackUpL3.Power.Unit, true);
-		this.setStateAsync("RunningData.BackUpL3.Power.ValueAsString", this.inverter.RunningData.BackUpL3.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.BackUpL3.Mode", this.inverter.RunningData.BackUpL3.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Voltage", AdapterInstance.inverter.RunningData.BackUpL2.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Current", AdapterInstance.inverter.RunningData.BackUpL2.Current, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Frequency", AdapterInstance.inverter.RunningData.BackUpL2.Frequency, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Power.Value", AdapterInstance.inverter.RunningData.BackUpL2.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Power.Unit", AdapterInstance.inverter.RunningData.BackUpL2.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Power.ValueAsString", AdapterInstance.inverter.RunningData.BackUpL2.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL2.Mode", AdapterInstance.inverter.RunningData.BackUpL2.Mode, true);
 
-		this.setStateAsync("RunningData.PowerL1.Value", this.inverter.RunningData.PowerL1.Value, true);
-		this.setStateAsync("RunningData.PowerL1.Unit", this.inverter.RunningData.PowerL1.Unit, true);
-		this.setStateAsync("RunningData.PowerL1.ValueAsString", this.inverter.RunningData.PowerL1.ValueAsString, true);
-		this.setStateAsync("RunningData.PowerL2.Value", this.inverter.RunningData.PowerL2.Value, true);
-		this.setStateAsync("RunningData.PowerL2.Unit", this.inverter.RunningData.PowerL2.Unit, true);
-		this.setStateAsync("RunningData.PowerL2.ValueAsString", this.inverter.RunningData.PowerL2.ValueAsString, true);
-		this.setStateAsync("RunningData.PowerL3.Value", this.inverter.RunningData.PowerL3.Value, true);
-		this.setStateAsync("RunningData.PowerL3.Unit", this.inverter.RunningData.PowerL3.Unit, true);
-		this.setStateAsync("RunningData.PowerL3.ValueAsString", this.inverter.RunningData.PowerL3.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Voltage", AdapterInstance.inverter.RunningData.BackUpL3.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Current", AdapterInstance.inverter.RunningData.BackUpL3.Current, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Frequency", AdapterInstance.inverter.RunningData.BackUpL3.Frequency, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Power.Value", AdapterInstance.inverter.RunningData.BackUpL3.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Power.Unit", AdapterInstance.inverter.RunningData.BackUpL3.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Power.ValueAsString", AdapterInstance.inverter.RunningData.BackUpL3.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.BackUpL3.Mode", AdapterInstance.inverter.RunningData.BackUpL3.Mode, true);
 
-		this.setStateAsync("RunningData.PowerBackUpLine.Value", this.inverter.RunningData.PowerBackUpLine.Value, true);
-		this.setStateAsync("RunningData.PowerBackUpLine.Unit", this.inverter.RunningData.PowerBackUpLine.Unit, true);
-		this.setStateAsync("RunningData.PowerBackUpLine.ValueAsString", this.inverter.RunningData.PowerBackUpLine.ValueAsString, true);
-		this.setStateAsync("RunningData.PowerGridLine.Value", this.inverter.RunningData.PowerGridLine.Value, true);
-		this.setStateAsync("RunningData.PowerGridLine.Unit", this.inverter.RunningData.PowerGridLine.Unit, true);
-		this.setStateAsync("RunningData.PowerGridLine.ValueAsString", this.inverter.RunningData.PowerGridLine.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL1.Value", AdapterInstance.inverter.RunningData.PowerL1.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL1.Unit", AdapterInstance.inverter.RunningData.PowerL1.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL1.ValueAsString", AdapterInstance.inverter.RunningData.PowerL1.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL2.Value", AdapterInstance.inverter.RunningData.PowerL2.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL2.Unit", AdapterInstance.inverter.RunningData.PowerL2.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL2.ValueAsString", AdapterInstance.inverter.RunningData.PowerL2.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL3.Value", AdapterInstance.inverter.RunningData.PowerL3.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL3.Unit", AdapterInstance.inverter.RunningData.PowerL3.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerL3.ValueAsString", AdapterInstance.inverter.RunningData.PowerL3.ValueAsString, true);
 
-		this.setStateAsync("RunningData.UpsLoadPercent", this.inverter.RunningData.UpsLoadPercent, true);
-		this.setStateAsync("RunningData.AirTemperature", this.inverter.RunningData.AirTemperature, true);
-		this.setStateAsync("RunningData.ModulTemperature", this.inverter.RunningData.ModulTemperature, true);
-		this.setStateAsync("RunningData.RadiatorTemperature", this.inverter.RunningData.RadiatorTemperature, true);
-		this.setStateAsync("RunningData.FunctionBitValue", this.inverter.RunningData.FunctionBitValue, true);
-		this.setStateAsync("RunningData.BusVoltage", this.inverter.RunningData.BusVoltage, true);
-		this.setStateAsync("RunningData.NbusVoltage", this.inverter.RunningData.NbusVoltage, true);
+		AdapterInstance.setStateAsync("RunningData.PowerBackUpLine.Value", AdapterInstance.inverter.RunningData.PowerBackUpLine.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerBackUpLine.Unit", AdapterInstance.inverter.RunningData.PowerBackUpLine.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerBackUpLine.ValueAsString", AdapterInstance.inverter.RunningData.PowerBackUpLine.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerGridLine.Value", AdapterInstance.inverter.RunningData.PowerGridLine.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerGridLine.Unit", AdapterInstance.inverter.RunningData.PowerGridLine.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerGridLine.ValueAsString", AdapterInstance.inverter.RunningData.PowerGridLine.ValueAsString, true);
 
-		this.setStateAsync("RunningData.Battery1.Voltage", this.inverter.RunningData.Battery1.Voltage, true);
-		this.setStateAsync("RunningData.Battery1.Current", this.inverter.RunningData.Battery1.Current, true);
-		this.setStateAsync("RunningData.Battery1.Power.Value", this.inverter.RunningData.Battery1.Power.Value, true);
-		this.setStateAsync("RunningData.Battery1.Power.Unit", this.inverter.RunningData.Battery1.Power.Unit, true);
-		this.setStateAsync("RunningData.Battery1.Power.ValueAsString", this.inverter.RunningData.Battery1.Power.ValueAsString, true);
-		this.setStateAsync("RunningData.Battery1.Mode", this.inverter.RunningData.Battery1.Mode, true);
-		this.setStateAsync("RunningData.Battery1.ModeLabel", this.inverter.RunningData.Battery1.ModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.UpsLoadPercent", AdapterInstance.inverter.RunningData.UpsLoadPercent, true);
+		AdapterInstance.setStateAsync("RunningData.AirTemperature", AdapterInstance.inverter.RunningData.AirTemperature, true);
+		AdapterInstance.setStateAsync("RunningData.ModulTemperature", AdapterInstance.inverter.RunningData.ModulTemperature, true);
+		AdapterInstance.setStateAsync("RunningData.RadiatorTemperature", AdapterInstance.inverter.RunningData.RadiatorTemperature, true);
+		AdapterInstance.setStateAsync("RunningData.FunctionBitValue", AdapterInstance.inverter.RunningData.FunctionBitValue, true);
+		AdapterInstance.setStateAsync("RunningData.BusVoltage", AdapterInstance.inverter.RunningData.BusVoltage, true);
+		AdapterInstance.setStateAsync("RunningData.NbusVoltage", AdapterInstance.inverter.RunningData.NbusVoltage, true);
 
-		this.setStateAsync("RunningData.WarningCode", this.inverter.RunningData.WarningCode, true);
-		this.setStateAsync("RunningData.SafetyCountry", this.inverter.RunningData.SafetyCountry, true);
-		this.setStateAsync("RunningData.SafetyCountryLabel", this.inverter.RunningData.SafetyCountryLabel, true);
-		this.setStateAsync("RunningData.WorkMode", this.inverter.RunningData.WorkMode, true);
-		this.setStateAsync("RunningData.WorkModeLabel", this.inverter.RunningData.WorkModeLabel, true);
-		this.setStateAsync("RunningData.OperationMode", this.inverter.RunningData.OperationMode, true);
-		this.setStateAsync("RunningData.ErrorMessage", this.inverter.RunningData.ErrorMessage, true);
-		this.setStateAsync("RunningData.ErrorMessageLabel", this.inverter.RunningData.ErrorMessageLabel, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.Voltage", AdapterInstance.inverter.RunningData.Battery1.Voltage, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.Current", AdapterInstance.inverter.RunningData.Battery1.Current, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.Power.Value", AdapterInstance.inverter.RunningData.Battery1.Power.Value, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.Power.Unit", AdapterInstance.inverter.RunningData.Battery1.Power.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.Power.ValueAsString", AdapterInstance.inverter.RunningData.Battery1.Power.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.Mode", AdapterInstance.inverter.RunningData.Battery1.Mode, true);
+		AdapterInstance.setStateAsync("RunningData.Battery1.ModeLabel", AdapterInstance.inverter.RunningData.Battery1.ModeLabel, true);
 
-		this.setStateAsync("RunningData.EnergyPvTotal.Value", this.inverter.RunningData.EnergyPvTotal.Value, true);
-		this.setStateAsync("RunningData.EnergyPvTotal.Unit", this.inverter.RunningData.EnergyPvTotal.Unit, true);
-		this.setStateAsync("RunningData.EnergyPvTotal.ValueAsString", this.inverter.RunningData.EnergyPvTotal.ValueAsString, true);
-		this.setStateAsync("RunningData.EnergyPvToday.Value", this.inverter.RunningData.EnergyPvToday.Value, true);
-		this.setStateAsync("RunningData.EnergyPvToday.Unit", this.inverter.RunningData.EnergyPvToday.Unit, true);
-		this.setStateAsync("RunningData.EnergyPvToday.ValueAsString", this.inverter.RunningData.EnergyPvToday.ValueAsString, true);
-		this.setStateAsync("RunningData.EnergyInverterOutTotal.Value", this.inverter.RunningData.EnergyInverterOutTotal.Value, true);
-		this.setStateAsync("RunningData.EnergyInverterOutTotal.Unit", this.inverter.RunningData.EnergyInverterOutTotal.Unit, true);
-		this.setStateAsync("RunningData.EnergyInverterOutTotal.ValueAsString", this.inverter.RunningData.EnergyInverterOutTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.WarningCode", AdapterInstance.inverter.RunningData.WarningCode, true);
+		AdapterInstance.setStateAsync("RunningData.SafetyCountry", AdapterInstance.inverter.RunningData.SafetyCountry, true);
+		AdapterInstance.setStateAsync("RunningData.SafetyCountryLabel", AdapterInstance.inverter.RunningData.SafetyCountryLabel, true);
+		AdapterInstance.setStateAsync("RunningData.WorkMode", AdapterInstance.inverter.RunningData.WorkMode, true);
+		AdapterInstance.setStateAsync("RunningData.WorkModeLabel", AdapterInstance.inverter.RunningData.WorkModeLabel, true);
+		AdapterInstance.setStateAsync("RunningData.OperationMode", AdapterInstance.inverter.RunningData.OperationMode, true);
+		AdapterInstance.setStateAsync("RunningData.ErrorMessage", AdapterInstance.inverter.RunningData.ErrorMessage, true);
+		AdapterInstance.setStateAsync("RunningData.ErrorMessageLabel", AdapterInstance.inverter.RunningData.ErrorMessageLabel, true);
 
-		this.setStateAsync("RunningData.HoursTotal", this.inverter.RunningData.HoursTotal, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyPvTotal.Value", AdapterInstance.inverter.RunningData.EnergyPvTotal.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyPvTotal.Unit", AdapterInstance.inverter.RunningData.EnergyPvTotal.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyPvTotal.ValueAsString", AdapterInstance.inverter.RunningData.EnergyPvTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyPvToday.Value", AdapterInstance.inverter.RunningData.EnergyPvToday.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyPvToday.Unit", AdapterInstance.inverter.RunningData.EnergyPvToday.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyPvToday.ValueAsString", AdapterInstance.inverter.RunningData.EnergyPvToday.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterOutTotal.Value", AdapterInstance.inverter.RunningData.EnergyInverterOutTotal.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterOutTotal.Unit", AdapterInstance.inverter.RunningData.EnergyInverterOutTotal.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterOutTotal.ValueAsString", AdapterInstance.inverter.RunningData.EnergyInverterOutTotal.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyInverterOutToday.Value", this.inverter.RunningData.EnergyInverterOutToday.Value, true);
-		this.setStateAsync("RunningData.EnergyInverterOutToday.Unit", this.inverter.RunningData.EnergyInverterOutToday.Unit, true);
-		this.setStateAsync("RunningData.EnergyInverterOutToday.ValueAsString", this.inverter.RunningData.EnergyInverterOutToday.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.HoursTotal", AdapterInstance.inverter.RunningData.HoursTotal, true);
 
-		this.setStateAsync("RunningData.EnergyInverterInTotal.Value", this.inverter.RunningData.EnergyInverterInTotal.Value, true);
-		this.setStateAsync("RunningData.EnergyInverterInTotal.Unit", this.inverter.RunningData.EnergyInverterInTotal.Unit, true);
-		this.setStateAsync("RunningData.EnergyInverterInTotal.ValueAsString", this.inverter.RunningData.EnergyInverterInTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterOutToday.Value", AdapterInstance.inverter.RunningData.EnergyInverterOutToday.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterOutToday.Unit", AdapterInstance.inverter.RunningData.EnergyInverterOutToday.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterOutToday.ValueAsString", AdapterInstance.inverter.RunningData.EnergyInverterOutToday.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyInverterInToday.Value", this.inverter.RunningData.EnergyInverterInToday.Value, true);
-		this.setStateAsync("RunningData.EnergyInverterInToday.Unit", this.inverter.RunningData.EnergyInverterInToday.Unit, true);
-		this.setStateAsync("RunningData.EnergyInverterInToday.ValueAsString", this.inverter.RunningData.EnergyInverterInToday.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterInTotal.Value", AdapterInstance.inverter.RunningData.EnergyInverterInTotal.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterInTotal.Unit", AdapterInstance.inverter.RunningData.EnergyInverterInTotal.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterInTotal.ValueAsString", AdapterInstance.inverter.RunningData.EnergyInverterInTotal.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyLoadTotal.Value", this.inverter.RunningData.EnergyLoadTotal.Value, true);
-		this.setStateAsync("RunningData.EnergyLoadTotal.Unit", this.inverter.RunningData.EnergyLoadTotal.Unit, true);
-		this.setStateAsync("RunningData.EnergyLoadTotal.ValueAsString", this.inverter.RunningData.EnergyLoadTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterInToday.Value", AdapterInstance.inverter.RunningData.EnergyInverterInToday.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterInToday.Unit", AdapterInstance.inverter.RunningData.EnergyInverterInToday.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyInverterInToday.ValueAsString", AdapterInstance.inverter.RunningData.EnergyInverterInToday.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyLoadToday.Value", this.inverter.RunningData.EnergyLoadToday.Value, true);
-		this.setStateAsync("RunningData.EnergyLoadToday.Unit", this.inverter.RunningData.EnergyLoadToday.Unit, true);
-		this.setStateAsync("RunningData.EnergyLoadToday.ValueAsString", this.inverter.RunningData.EnergyLoadToday.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyLoadTotal.Value", AdapterInstance.inverter.RunningData.EnergyLoadTotal.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyLoadTotal.Unit", AdapterInstance.inverter.RunningData.EnergyLoadTotal.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyLoadTotal.ValueAsString", AdapterInstance.inverter.RunningData.EnergyLoadTotal.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyBatteryChargeTotal.Value", this.inverter.RunningData.EnergyBatteryChargeTotal.Value, true);
-		this.setStateAsync("RunningData.EnergyBatteryChargeTotal.Unit", this.inverter.RunningData.EnergyBatteryChargeTotal.Unit, true);
-		this.setStateAsync("RunningData.EnergyBatteryChargeTotal.ValueAsString", this.inverter.RunningData.EnergyBatteryChargeTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyLoadToday.Value", AdapterInstance.inverter.RunningData.EnergyLoadToday.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyLoadToday.Unit", AdapterInstance.inverter.RunningData.EnergyLoadToday.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyLoadToday.ValueAsString", AdapterInstance.inverter.RunningData.EnergyLoadToday.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyBatteryChargeToday.Value", this.inverter.RunningData.EnergyBatteryChargeToday.Value, true);
-		this.setStateAsync("RunningData.EnergyBatteryChargeToday.Unit", this.inverter.RunningData.EnergyBatteryChargeToday.Unit, true);
-		this.setStateAsync("RunningData.EnergyBatteryChargeToday.ValueAsString", this.inverter.RunningData.EnergyBatteryChargeToday.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryChargeTotal.Value", AdapterInstance.inverter.RunningData.EnergyBatteryChargeTotal.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryChargeTotal.Unit", AdapterInstance.inverter.RunningData.EnergyBatteryChargeTotal.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryChargeTotal.ValueAsString", AdapterInstance.inverter.RunningData.EnergyBatteryChargeTotal.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyBatteryDischargeTotal.Value", this.inverter.RunningData.EnergyBatteryDischargeTotal.Value, true);
-		this.setStateAsync("RunningData.EnergyBatteryDischargeTotal.Unit", this.inverter.RunningData.EnergyBatteryDischargeTotal.Unit, true);
-		this.setStateAsync("RunningData.EnergyBatteryDischargeTotal.ValueAsString", this.inverter.RunningData.EnergyBatteryDischargeTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryChargeToday.Value", AdapterInstance.inverter.RunningData.EnergyBatteryChargeToday.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryChargeToday.Unit", AdapterInstance.inverter.RunningData.EnergyBatteryChargeToday.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryChargeToday.ValueAsString", AdapterInstance.inverter.RunningData.EnergyBatteryChargeToday.ValueAsString, true);
 
-		this.setStateAsync("RunningData.EnergyBatteryDischargeToday.Value", this.inverter.RunningData.EnergyBatteryDischargeToday.Value, true);
-		this.setStateAsync("RunningData.EnergyBatteryDischargeToday.Unit", this.inverter.RunningData.EnergyBatteryDischargeToday.Unit, true);
-		this.setStateAsync("RunningData.EnergyBatteryDischargeToday.ValueAsString", this.inverter.RunningData.EnergyBatteryDischargeToday.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryDischargeTotal.Value", AdapterInstance.inverter.RunningData.EnergyBatteryDischargeTotal.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryDischargeTotal.Unit", AdapterInstance.inverter.RunningData.EnergyBatteryDischargeTotal.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryDischargeTotal.ValueAsString", AdapterInstance.inverter.RunningData.EnergyBatteryDischargeTotal.ValueAsString, true);
 
-		this.setStateAsync("RunningData.BatteryStrings", this.inverter.RunningData.BatteryStrings, true);
-		this.setStateAsync("RunningData.CpldWarningCode", this.inverter.RunningData.CpldWarningCode, true);
-		this.setStateAsync("RunningData.WChargeCtrFlag", this.inverter.RunningData.WChargeCtrFlag, true);
-		this.setStateAsync("RunningData.DerateFrozenPower", this.inverter.RunningData.DerateFrozenPower, true);
-		this.setStateAsync("RunningData.DiagStatusHigh", this.inverter.RunningData.DiagStatusHigh, true);
-		this.setStateAsync("RunningData.DiagStatusLow", this.inverter.RunningData.DiagStatusLow, true);
-		this.setStateAsync("RunningData.DiagStatusLowAsString", this.inverter.RunningData.DiagStatusLowAsString, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryDischargeToday.Value", AdapterInstance.inverter.RunningData.EnergyBatteryDischargeToday.Value, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryDischargeToday.Unit", AdapterInstance.inverter.RunningData.EnergyBatteryDischargeToday.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.EnergyBatteryDischargeToday.ValueAsString", AdapterInstance.inverter.RunningData.EnergyBatteryDischargeToday.ValueAsString, true);
 
-		this.setStateAsync("RunningData.PowerAllPv.Value", this.inverter.RunningData.PowerAllPv.Value, true);
-		this.setStateAsync("RunningData.PowerAllPv.Unit", this.inverter.RunningData.PowerAllPv.Unit, true);
-		this.setStateAsync("RunningData.PowerAllPv.ValueAsString", this.inverter.RunningData.PowerAllPv.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.BatteryStrings", AdapterInstance.inverter.RunningData.BatteryStrings, true);
+		AdapterInstance.setStateAsync("RunningData.CpldWarningCode", AdapterInstance.inverter.RunningData.CpldWarningCode, true);
+		AdapterInstance.setStateAsync("RunningData.WChargeCtrFlag", AdapterInstance.inverter.RunningData.WChargeCtrFlag, true);
+		AdapterInstance.setStateAsync("RunningData.DerateFrozenPower", AdapterInstance.inverter.RunningData.DerateFrozenPower, true);
+		AdapterInstance.setStateAsync("RunningData.DiagStatusHigh", AdapterInstance.inverter.RunningData.DiagStatusHigh, true);
+		AdapterInstance.setStateAsync("RunningData.DiagStatusLow", AdapterInstance.inverter.RunningData.DiagStatusLow, true);
+		AdapterInstance.setStateAsync("RunningData.DiagStatusLowAsString", AdapterInstance.inverter.RunningData.DiagStatusLowAsString, true);
 
-		this.setStateAsync("RunningData.PowerHouseConsumptionPv.Value", this.inverter.RunningData.PowerHouseConsumptionPv.Value, true);
-		this.setStateAsync("RunningData.PowerHouseConsumptionPv.Unit", this.inverter.RunningData.PowerHouseConsumptionPv.Unit, true);
-		this.setStateAsync("RunningData.PowerHouseConsumptionPv.ValueAsString", this.inverter.RunningData.PowerHouseConsumptionPv.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerAllPv.Value", AdapterInstance.inverter.RunningData.PowerAllPv.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerAllPv.Unit", AdapterInstance.inverter.RunningData.PowerAllPv.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerAllPv.ValueAsString", AdapterInstance.inverter.RunningData.PowerAllPv.ValueAsString, true);
 
-		this.setStateAsync("RunningData.PowerHouseConsumptionAC.Value", this.inverter.RunningData.PowerHouseConsumptionAC.Value, true);
-		this.setStateAsync("RunningData.PowerHouseConsumptionAC.Unit", this.inverter.RunningData.PowerHouseConsumptionAC.Unit, true);
-		this.setStateAsync("RunningData.PowerHouseConsumptionAC.ValueAsString", this.inverter.RunningData.PowerHouseConsumptionAC.ValueAsString, true);
+		AdapterInstance.setStateAsync("RunningData.PowerHouseConsumptionPv.Value", AdapterInstance.inverter.RunningData.PowerHouseConsumptionPv.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerHouseConsumptionPv.Unit", AdapterInstance.inverter.RunningData.PowerHouseConsumptionPv.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerHouseConsumptionPv.ValueAsString", AdapterInstance.inverter.RunningData.PowerHouseConsumptionPv.ValueAsString, true);
 
-	}
-	
-	async UpdateExtComData() {
-		await this.inverter.ReadExtComData()
-		.catch((ex) => {
+		AdapterInstance.setStateAsync("RunningData.PowerHouseConsumptionAC.Value", AdapterInstance.inverter.RunningData.PowerHouseConsumptionAC.Value, true);
+		AdapterInstance.setStateAsync("RunningData.PowerHouseConsumptionAC.Unit", AdapterInstance.inverter.RunningData.PowerHouseConsumptionAC.Unit, true);
+		AdapterInstance.setStateAsync("RunningData.PowerHouseConsumptionAC.ValueAsString", AdapterInstance.inverter.RunningData.PowerHouseConsumptionAC.ValueAsString, true);
 
-			if(ex != "Timeout") {
-				this.log.error("UpdateExtComData returned error -> " + ex)
-			}
-		});
-
-		this.setStateAsync("ExtComData.Commode", this.inverter.ExtComData.Commode, true);
-		this.setStateAsync("ExtComData.Rssi", this.inverter.ExtComData.Rssi, true);
-		this.setStateAsync("ExtComData.ManufacturerCode", this.inverter.ExtComData.ManufacturerCode, true);
-		this.setStateAsync("ExtComData.MeterConnectStatus", this.inverter.ExtComData.MeterConnectStatus, true);
-		this.setStateAsync("ExtComData.MeterCommunicateStatus", this.inverter.ExtComData.MeterCommunicateStatus, true);
-		this.setStateAsync("ExtComData.L1.ActivePower", this.inverter.ExtComData.L1.ActivePower, true);
-		this.setStateAsync("ExtComData.L1.PowerFactor", this.inverter.ExtComData.L1.PowerFactor, true);
-		this.setStateAsync("ExtComData.L2.ActivePower", this.inverter.ExtComData.L2.ActivePower, true);
-		this.setStateAsync("ExtComData.L2.PowerFactor", this.inverter.ExtComData.L2.PowerFactor, true);
-		this.setStateAsync("ExtComData.L3.ActivePower", this.inverter.ExtComData.L3.ActivePower, true);
-		this.setStateAsync("ExtComData.L3.PowerFactor", this.inverter.ExtComData.L3.PowerFactor, true);
-		this.setStateAsync("ExtComData.TotalActivePower", this.inverter.ExtComData.TotalActivePower, true);
-		this.setStateAsync("ExtComData.TotalReactivePower", this.inverter.ExtComData.TotalReactivePower, true);
-		this.setStateAsync("ExtComData.PowerFactor", this.inverter.ExtComData.PowerFactor, true);
-		this.setStateAsync("ExtComData.Frequency", this.inverter.ExtComData.Frequency, true);
-		this.setStateAsync("ExtComData.EnergyTotalSell.Value", this.inverter.ExtComData.EnergyTotalSell.Value, true);
-		this.setStateAsync("ExtComData.EnergyTotalSell.Unit", this.inverter.ExtComData.EnergyTotalSell.Unit, true);
-		this.setStateAsync("ExtComData.EnergyTotalSell.ValueAsString", this.inverter.ExtComData.EnergyTotalSell.ValueAsString, true);
-		this.setStateAsync("ExtComData.EnergyTotalBuy.Value", this.inverter.ExtComData.EnergyTotalBuy.Value, true);
-		this.setStateAsync("ExtComData.EnergyTotalBuy.Unit", this.inverter.ExtComData.EnergyTotalBuy.Unit, true);
-		this.setStateAsync("ExtComData.EnergyTotalBuy.ValueAsString", this.inverter.ExtComData.EnergyTotalBuy.ValueAsString, true);
 	}
 	
-	async UpdateBmsInfo() {
-		await this.inverter.ReadBmsInfo()
-              .catch((ex) => {
+	UpdateExtComData(AdapterInstance) {
 
-					if(ex != "Timeout") {
-						this.log.error("UpdateBmsInfo returned error -> " + ex)
-					}
-				});
+		if(AdapterInstance == null) {
+			return;
+		}
 
-		this.setStateAsync("BMSInfo.Status", this.inverter.BmsInfo.Status, true);
-		this.setStateAsync("BMSInfo.PackTemperature", this.inverter.BmsInfo.PackTemperature, true);
-		this.setStateAsync("BMSInfo.MaxChargeCurrent", this.inverter.BmsInfo.MaxChargeCurrent, true);
-		this.setStateAsync("BMSInfo.MaxDischargeCurrent", this.inverter.BmsInfo.MaxDischargeCurrent, true);
-		this.setStateAsync("BMSInfo.ErrorCodeLow", this.inverter.BmsInfo.ErrorCodeLow, true);
-		this.setStateAsync("BMSInfo.SOC", this.inverter.BmsInfo.SOC, true);
-		this.setStateAsync("BMSInfo.SOH", this.inverter.BmsInfo.SOH, true);
-		this.setStateAsync("BMSInfo.BatteryStrings", this.inverter.BmsInfo.BatteryStrings, true);
-		this.setStateAsync("BMSInfo.WarningCodeLow", this.inverter.BmsInfo.WarningCodeLow, true);
-		this.setStateAsync("BMSInfo.Protocol", this.inverter.BmsInfo.Protocol, true);
-		this.setStateAsync("BMSInfo.ErrorCodeHigh", this.inverter.BmsInfo.ErrorCodeHigh, true);
-		this.setStateAsync("BMSInfo.WarningCodeHigh", this.inverter.BmsInfo.WarningCodeHigh, true);
-		this.setStateAsync("BMSInfo.VersionSW", this.inverter.BmsInfo.VersionSW, true);
-		this.setStateAsync("BMSInfo.VersionHW", this.inverter.BmsInfo.VersionHW, true);
-		this.setStateAsync("BMSInfo.MaxCellTempID", this.inverter.BmsInfo.MaxCellTempID, true);
-		this.setStateAsync("BMSInfo.MinCellTempID", this.inverter.BmsInfo.MinCellTempID, true);
-		this.setStateAsync("BMSInfo.MaxCellVoltageID", this.inverter.BmsInfo.MaxCellVoltageID, true);
-		this.setStateAsync("BMSInfo.MinCellVoltageID", this.inverter.BmsInfo.MinCellVoltageID, true);
-		this.setStateAsync("BMSInfo.MaxCellTemperature", this.inverter.BmsInfo.MaxCellTemperature, true);
-		this.setStateAsync("BMSInfo.MinCellTemperature", this.inverter.BmsInfo.MinCellTemperature, true);
-		this.setStateAsync("BMSInfo.MaxCellVoltage", this.inverter.BmsInfo.MaxCellVoltage, true);
-		this.setStateAsync("BMSInfo.MinCellVoltage", this.inverter.BmsInfo.MinCellVoltage, true);
+		AdapterInstance.log.debug("UpdateExtComData new data received");
 
-		this.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.Value", this.inverter.BmsInfo.EnergyBatteryChargedTotal.Value, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.Unit", this.inverter.BmsInfo.EnergyBatteryChargedTotal.Unit, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.ValueAsString", this.inverter.BmsInfo.EnergyBatteryChargedTotal.ValueAsString, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.Value", this.inverter.BmsInfo.EnergyBatteryDischargedTotal.Value, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.Unit", this.inverter.BmsInfo.EnergyBatteryDischargedTotal.Unit, true);
-		this.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.ValueAsString", this.inverter.BmsInfo.EnergyBatteryDischargedTotal.ValueAsString, true);
-		this.setStateAsync("BMSInfo.SerialNumber", this.inverter.BmsInfo.SerialNumber, true);
-	}
-
-	async UpdateControlParamsBlock1() {
-		await this.inverter.ReadControlDataBlock1()
-		.catch((ex) => {
-
-			if(ex != "Timeout") {
-				this.log.error("UpdateControlParamsBlock1 returned error -> " + ex)
-			}
-		});
-
-		this.setStateAsync("ControlParameter.ShadowScanEnabled.Register", this.inverter.ControlParameter.ShadowScanEnabled.Register, true);
-		this.setStateAsync("ControlParameter.ShadowScanEnabled.Value", this.inverter.ControlParameter.ShadowScanEnabled.Value, true);
-		this.setStateAsync("ControlParameter.ShadowScanEnabled.Unit", this.inverter.ControlParameter.ShadowScanEnabled.Unit, true);
-		this.setStateAsync("ControlParameter.ShadowScanEnabled.ValueAsString", this.inverter.ControlParameter.ShadowScanEnabled.ValueAsString, true);
-
-		this.setStateAsync("ControlParameter.ShadowScanCycle.Register", this.inverter.ControlParameter.ShadowScanCycle.Register, true);
-		this.setStateAsync("ControlParameter.ShadowScanCycle.Value", this.inverter.ControlParameter.ShadowScanCycle.Value, true);
-		this.setStateAsync("ControlParameter.ShadowScanCycle.Unit", this.inverter.ControlParameter.ShadowScanCycle.Unit, true);
-		this.setStateAsync("ControlParameter.ShadowScanCycle.ValueAsString", this.inverter.ControlParameter.ShadowScanCycle.ValueAsString, true);
-	}
-
-	async UpdateControlParamsBlock2() {
-		await this.inverter.ReadControlDataBlock2()
-		.catch((ex) => {
-
-			if(ex != "Timeout") {
-				this.log.error("UpdateControlParamsBlock2 returned error -> " + ex)
-			}
-		});
-
-		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.Register", this.inverter.ControlParameter.BattMinSOCOnGrid.Register, true);
-		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.Value", this.inverter.ControlParameter.BattMinSOCOnGrid.Value, true);
-		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.Unit", this.inverter.ControlParameter.BattMinSOCOnGrid.Unit, true);
-		this.setStateAsync("ControlParameter.BattMinSOCOnGrid.ValueAsString", this.inverter.ControlParameter.BattMinSOCOnGrid.ValueAsString, true);
-
-		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.Register", this.inverter.ControlParameter.BattMinSOCOffGrid.Register, true);
-		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.Value", this.inverter.ControlParameter.BattMinSOCOffGrid.Value, true);
-		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.Unit", this.inverter.ControlParameter.BattMinSOCOffGrid.Unit, true);
-		this.setStateAsync("ControlParameter.BattMinSOCOffGrid.ValueAsString", this.inverter.ControlParameter.BattMinSOCOffGrid.ValueAsString, true);
+		AdapterInstance.setStateAsync("ExtComData.Commode", AdapterInstance.inverter.ExtComData.Commode, true);
+		AdapterInstance.setStateAsync("ExtComData.Rssi", AdapterInstance.inverter.ExtComData.Rssi, true);
+		AdapterInstance.setStateAsync("ExtComData.ManufacturerCode", AdapterInstance.inverter.ExtComData.ManufacturerCode, true);
+		AdapterInstance.setStateAsync("ExtComData.MeterConnectStatus", AdapterInstance.inverter.ExtComData.MeterConnectStatus, true);
+		AdapterInstance.setStateAsync("ExtComData.MeterCommunicateStatus", AdapterInstance.inverter.ExtComData.MeterCommunicateStatus, true);
+		AdapterInstance.setStateAsync("ExtComData.L1.ActivePower", AdapterInstance.inverter.ExtComData.L1.ActivePower, true);
+		AdapterInstance.setStateAsync("ExtComData.L1.PowerFactor", AdapterInstance.inverter.ExtComData.L1.PowerFactor, true);
+		AdapterInstance.setStateAsync("ExtComData.L2.ActivePower", AdapterInstance.inverter.ExtComData.L2.ActivePower, true);
+		AdapterInstance.setStateAsync("ExtComData.L2.PowerFactor", AdapterInstance.inverter.ExtComData.L2.PowerFactor, true);
+		AdapterInstance.setStateAsync("ExtComData.L3.ActivePower", AdapterInstance.inverter.ExtComData.L3.ActivePower, true);
+		AdapterInstance.setStateAsync("ExtComData.L3.PowerFactor", AdapterInstance.inverter.ExtComData.L3.PowerFactor, true);
+		AdapterInstance.setStateAsync("ExtComData.TotalActivePower", AdapterInstance.inverter.ExtComData.TotalActivePower, true);
+		AdapterInstance.setStateAsync("ExtComData.TotalReactivePower", AdapterInstance.inverter.ExtComData.TotalReactivePower, true);
+		AdapterInstance.setStateAsync("ExtComData.PowerFactor", AdapterInstance.inverter.ExtComData.PowerFactor, true);
+		AdapterInstance.setStateAsync("ExtComData.Frequency", AdapterInstance.inverter.ExtComData.Frequency, true);
+		AdapterInstance.setStateAsync("ExtComData.EnergyTotalSell.Value", AdapterInstance.inverter.ExtComData.EnergyTotalSell.Value, true);
+		AdapterInstance.setStateAsync("ExtComData.EnergyTotalSell.Unit", AdapterInstance.inverter.ExtComData.EnergyTotalSell.Unit, true);
+		AdapterInstance.setStateAsync("ExtComData.EnergyTotalSell.ValueAsString", AdapterInstance.inverter.ExtComData.EnergyTotalSell.ValueAsString, true);
+		AdapterInstance.setStateAsync("ExtComData.EnergyTotalBuy.Value", AdapterInstance.inverter.ExtComData.EnergyTotalBuy.Value, true);
+		AdapterInstance.setStateAsync("ExtComData.EnergyTotalBuy.Unit", AdapterInstance.inverter.ExtComData.EnergyTotalBuy.Unit, true);
+		AdapterInstance.setStateAsync("ExtComData.EnergyTotalBuy.ValueAsString", AdapterInstance.inverter.ExtComData.EnergyTotalBuy.ValueAsString, true);
 	}
 	
-	async UpdateControlParamsBlock3() {
-		await this.inverter.ReadControlDataBlock3()
-		.catch((ex) => {
+	UpdateBmsInfo(AdapterInstance) {
 
-			if(ex != "Timeout") {
-				this.log.error("UpdateControlParamsBlock3 returned error -> " + ex)
-			}
-		});
+		if(AdapterInstance == null) {
+			return;
+		}
 
-		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.Register", this.inverter.ControlParameter.BackupSOCProtectionEnabled.Register, true);
-		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.Value", this.inverter.ControlParameter.BackupSOCProtectionEnabled.Value, true);
-		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.Unit", this.inverter.ControlParameter.BackupSOCProtectionEnabled.Unit, true);
-		this.setStateAsync("ControlParameter.BackupSOCProtectionEnabled.ValueAsString", this.inverter.ControlParameter.BackupSOCProtectionEnabled.ValueAsString, true);
+		AdapterInstance.log.debug("UpdateBmsInfo new data received");
 
-		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Register", this.inverter.ControlParameter.BackupSOCHoldingEnabled.Register, true);
-		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Value", this.inverter.ControlParameter.BackupSOCHoldingEnabled.Value, true);
-		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Unit", this.inverter.ControlParameter.BackupSOCHoldingEnabled.Unit, true);
-		this.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.ValueAsString", this.inverter.ControlParameter.BackupSOCHoldingEnabled.ValueAsString, true);
+		AdapterInstance.setStateAsync("BMSInfo.Status", AdapterInstance.inverter.BmsInfo.Status, true);
+		AdapterInstance.setStateAsync("BMSInfo.PackTemperature", AdapterInstance.inverter.BmsInfo.PackTemperature, true);
+		AdapterInstance.setStateAsync("BMSInfo.MaxChargeCurrent", AdapterInstance.inverter.BmsInfo.MaxChargeCurrent, true);
+		AdapterInstance.setStateAsync("BMSInfo.MaxDischargeCurrent", AdapterInstance.inverter.BmsInfo.MaxDischargeCurrent, true);
+		AdapterInstance.setStateAsync("BMSInfo.ErrorCodeLow", AdapterInstance.inverter.BmsInfo.ErrorCodeLow, true);
+		AdapterInstance.setStateAsync("BMSInfo.SOC", AdapterInstance.inverter.BmsInfo.SOC, true);
+		AdapterInstance.setStateAsync("BMSInfo.SOH", AdapterInstance.inverter.BmsInfo.SOH, true);
+		AdapterInstance.setStateAsync("BMSInfo.BatteryStrings", AdapterInstance.inverter.BmsInfo.BatteryStrings, true);
+		AdapterInstance.setStateAsync("BMSInfo.WarningCodeLow", AdapterInstance.inverter.BmsInfo.WarningCodeLow, true);
+		AdapterInstance.setStateAsync("BMSInfo.Protocol", AdapterInstance.inverter.BmsInfo.Protocol, true);
+		AdapterInstance.setStateAsync("BMSInfo.ErrorCodeHigh", AdapterInstance.inverter.BmsInfo.ErrorCodeHigh, true);
+		AdapterInstance.setStateAsync("BMSInfo.WarningCodeHigh", AdapterInstance.inverter.BmsInfo.WarningCodeHigh, true);
+		AdapterInstance.setStateAsync("BMSInfo.VersionSW", AdapterInstance.inverter.BmsInfo.VersionSW, true);
+		AdapterInstance.setStateAsync("BMSInfo.VersionHW", AdapterInstance.inverter.BmsInfo.VersionHW, true);
+		AdapterInstance.setStateAsync("BMSInfo.MaxCellTempID", AdapterInstance.inverter.BmsInfo.MaxCellTempID, true);
+		AdapterInstance.setStateAsync("BMSInfo.MinCellTempID", AdapterInstance.inverter.BmsInfo.MinCellTempID, true);
+		AdapterInstance.setStateAsync("BMSInfo.MaxCellVoltageID", AdapterInstance.inverter.BmsInfo.MaxCellVoltageID, true);
+		AdapterInstance.setStateAsync("BMSInfo.MinCellVoltageID", AdapterInstance.inverter.BmsInfo.MinCellVoltageID, true);
+		AdapterInstance.setStateAsync("BMSInfo.MaxCellTemperature", AdapterInstance.inverter.BmsInfo.MaxCellTemperature, true);
+		AdapterInstance.setStateAsync("BMSInfo.MinCellTemperature", AdapterInstance.inverter.BmsInfo.MinCellTemperature, true);
+		AdapterInstance.setStateAsync("BMSInfo.MaxCellVoltage", AdapterInstance.inverter.BmsInfo.MaxCellVoltage, true);
+		AdapterInstance.setStateAsync("BMSInfo.MinCellVoltage", AdapterInstance.inverter.BmsInfo.MinCellVoltage, true);
 
-		this.setStateAsync("ControlParameter.FastChargeEnabled.Register", this.inverter.ControlParameter.FastChargeEnabled.Register, true);
-		this.setStateAsync("ControlParameter.FastChargeEnabled.Value", this.inverter.ControlParameter.FastChargeEnabled.Value, true);
-		this.setStateAsync("ControlParameter.FastChargeEnabled.Unit", this.inverter.ControlParameter.FastChargeEnabled.Unit, true);
-		this.setStateAsync("ControlParameter.FastChargeEnabled.ValueAsString", this.inverter.ControlParameter.FastChargeEnabled.ValueAsString, true);
+		AdapterInstance.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.Value", AdapterInstance.inverter.BmsInfo.EnergyBatteryChargedTotal.Value, true);
+		AdapterInstance.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.Unit", AdapterInstance.inverter.BmsInfo.EnergyBatteryChargedTotal.Unit, true);
+		AdapterInstance.setStateAsync("BMSInfo.EnergyBatteryChargedTotal.ValueAsString", AdapterInstance.inverter.BmsInfo.EnergyBatteryChargedTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.Value", AdapterInstance.inverter.BmsInfo.EnergyBatteryDischargedTotal.Value, true);
+		AdapterInstance.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.Unit", AdapterInstance.inverter.BmsInfo.EnergyBatteryDischargedTotal.Unit, true);
+		AdapterInstance.setStateAsync("BMSInfo.EnergyBatteryDischargedTotal.ValueAsString", AdapterInstance.inverter.BmsInfo.EnergyBatteryDischargedTotal.ValueAsString, true);
+		AdapterInstance.setStateAsync("BMSInfo.SerialNumber", AdapterInstance.inverter.BmsInfo.SerialNumber, true);
+	}
 
-		this.setStateAsync("ControlParameter.FastChargeSOCStop.Register", this.inverter.ControlParameter.FastChargeSOCStop.Register, true);
-		this.setStateAsync("ControlParameter.FastChargeSOCStop.Value", this.inverter.ControlParameter.FastChargeSOCStop.Value, true);
-		this.setStateAsync("ControlParameter.FastChargeSOCStop.Unit", this.inverter.ControlParameter.FastChargeSOCStop.Unit, true);
-		this.setStateAsync("ControlParameter.FastChargeSOCStop.ValueAsString", this.inverter.ControlParameter.FastChargeSOCStop.ValueAsString, true);
+	UpdateControlParamsBlock1(AdapterInstance) {
+
+		if(AdapterInstance == null) {
+			return;
+		}
+
+		AdapterInstance.log.debug("UpdateControlParamsBlock1 new data received");
+
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanEnabled.Register", AdapterInstance.inverter.ControlParameter.ShadowScanEnabled.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanEnabled.Value", AdapterInstance.inverter.ControlParameter.ShadowScanEnabled.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanEnabled.Unit", AdapterInstance.inverter.ControlParameter.ShadowScanEnabled.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanEnabled.ValueAsString", AdapterInstance.inverter.ControlParameter.ShadowScanEnabled.ValueAsString, true);
+
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanCycle.Register", AdapterInstance.inverter.ControlParameter.ShadowScanCycle.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanCycle.Value", AdapterInstance.inverter.ControlParameter.ShadowScanCycle.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanCycle.Unit", AdapterInstance.inverter.ControlParameter.ShadowScanCycle.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.ShadowScanCycle.ValueAsString", AdapterInstance.inverter.ControlParameter.ShadowScanCycle.ValueAsString, true);
+	}
+
+	UpdateControlParamsBlock2(AdapterInstance) {
+
+		if(AdapterInstance == null) {
+			return;
+		}
+
+		AdapterInstance.log.debug("UpdateControlParamsBlock2 new data received");
+
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOnGrid.Register", AdapterInstance.inverter.ControlParameter.BattMinSOCOnGrid.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOnGrid.Value", AdapterInstance.inverter.ControlParameter.BattMinSOCOnGrid.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOnGrid.Unit", AdapterInstance.inverter.ControlParameter.BattMinSOCOnGrid.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOnGrid.ValueAsString", AdapterInstance.inverter.ControlParameter.BattMinSOCOnGrid.ValueAsString, true);
+
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOffGrid.Register", AdapterInstance.inverter.ControlParameter.BattMinSOCOffGrid.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOffGrid.Value", AdapterInstance.inverter.ControlParameter.BattMinSOCOffGrid.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOffGrid.Unit", AdapterInstance.inverter.ControlParameter.BattMinSOCOffGrid.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.BattMinSOCOffGrid.ValueAsString", AdapterInstance.inverter.ControlParameter.BattMinSOCOffGrid.ValueAsString, true);
+	}
+	
+	UpdateControlParamsBlock3(AdapterInstance) {
+
+		if(AdapterInstance == null) {
+			return;
+		}
+
+		AdapterInstance.log.debug("UpdateControlParamsBlock3 new data received");
+
+		AdapterInstance.setStateAsync("ControlParameter.SOCProtectionDisabled.Register", AdapterInstance.inverter.ControlParameter.SOCProtectionDisabled.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.SOCProtectionDisabled.Value", AdapterInstance.inverter.ControlParameter.SOCProtectionDisabled.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.SOCProtectionDisabled.Unit", AdapterInstance.inverter.ControlParameter.SOCProtectionDisabled.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.SOCProtectionDisabled.ValueAsString", AdapterInstance.inverter.ControlParameter.SOCProtectionDisabled.ValueAsString, true);
+
+		AdapterInstance.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Register", AdapterInstance.inverter.ControlParameter.BackupSOCHoldingEnabled.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Value", AdapterInstance.inverter.ControlParameter.BackupSOCHoldingEnabled.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.Unit", AdapterInstance.inverter.ControlParameter.BackupSOCHoldingEnabled.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.BackupSOCHoldingEnabled.ValueAsString", AdapterInstance.inverter.ControlParameter.BackupSOCHoldingEnabled.ValueAsString, true);
+
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeEnabled.Register", AdapterInstance.inverter.ControlParameter.FastChargeEnabled.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeEnabled.Value", AdapterInstance.inverter.ControlParameter.FastChargeEnabled.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeEnabled.Unit", AdapterInstance.inverter.ControlParameter.FastChargeEnabled.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeEnabled.ValueAsString", AdapterInstance.inverter.ControlParameter.FastChargeEnabled.ValueAsString, true);
+
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeSOCStop.Register", AdapterInstance.inverter.ControlParameter.FastChargeSOCStop.Register, true);
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeSOCStop.Value", AdapterInstance.inverter.ControlParameter.FastChargeSOCStop.Value, true);
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeSOCStop.Unit", AdapterInstance.inverter.ControlParameter.FastChargeSOCStop.Unit, true);
+		AdapterInstance.setStateAsync("ControlParameter.FastChargeSOCStop.ValueAsString", AdapterInstance.inverter.ControlParameter.FastChargeSOCStop.ValueAsString, true);
 	}
 
 	async myTimer() {	
 		if (this.inverter.Status == false) {
 			this.cycleCnt = 0;
-			this.inverter.ReadIdInfo();
+			this.inverter.ReadIdInfo(this);
 		} else {
 		
 			switch (this.cycleCnt) {
 				case 1:
-					await this.UpdateDeviceInfo();
-					//this.log.info("Goodwe update");
-					break;
-				case 3:
-					await this.UpdateRunningData();
+					this.inverter.ReadDeviceInfo(this, this.UpdateDeviceInfo);
 					break;
 				case 5:
-					await this.UpdateExtComData();
+					this.inverter.ReadRunningData(this, this.UpdateRunningData);
 					break;
-				case 7:
-					await this.UpdateBmsInfo();
+				case 10:
+					this.inverter.ReadExtComData(this, this.UpdateExtComData);
 					break;
-				case 9:
-					await this.UpdateControlParamsBlock1();
+				case 15:
+					this.inverter.ReadBmsInfo(this, this.UpdateBmsInfo);
+					break;
+				case 20:
+					this.inverter.ReadControlDataBlock1(this, this.UpdateControlParamsBlock1);
 					break;				
-				case 11:
-					await this.UpdateControlParamsBlock2();
+				case 25:
+					this.inverter.ReadControlDataBlock2(this, this.UpdateControlParamsBlock2);
 					break;				
-				case 13:
-					await this.UpdateControlParamsBlock3();
+				case 30:
+					this.inverter.ReadControlDataBlock3(this, this.UpdateControlParamsBlock3);
 					break;				
 			}
 
@@ -1031,19 +1032,9 @@ class Goodwe extends utils.Adapter {
 
 		Param.Value = state.val;
 
-		await this.inverter.WriteControlParameter(Param)
-              .catch((ex) => {
-                  if(ex != "Timeout") {
-                      this.log.error("WriteControlParameter: writing data for register " + Param.Register + " returned error -> " + ex);
-                  }
-               });
+		this.inverter.WriteControlParameter(Param);
 
-        await this.inverter.ReadControlParameter(Param)
-              .catch((ex) => {
-                  if(ex != "Timeout") {
-                      this.log.error("ReadControlParameter: reading data for register " + Param.Register + " returned error -> " + ex);
-                  }
-               });
+		this.inverter.ReadControlParameter(idRegister.ToStirng(), Param, null, null);
 	}	
 }
 

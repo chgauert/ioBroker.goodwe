@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "goodwe",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "news": {
+      "1.0.7": {
+        "en": "(Christian Gauert) Changed data-read mechanism",
+        "de": "(Christian Gauert) Routinen zum Lesen der Daten vom Inverter geändert",
+        "ru": "(Christian Gauert) Changed data-read mechanism",
+        "pt": "(Christian Gauert) Changed data-read mechanism",
+        "nl": "(Christian Gauert) Changed data-read mechanism",
+        "fr": "(Christian Gauert) Changed data-read mechanism",
+        "it": "(Christian Gauert) Changed data-read mechanism",
+        "es": "(Christian Gauert) Changed data-read mechanism",
+        "pl": "(Christian Gauert) Changed data-read mechanism",
+        "uk": "(Christian Gauert) Changed data-read mechanism",
+        "zh-cn": "(Christian Gauert) Changed data-read mechanism"
+      },       
       "1.0.6": {
         "en": "(Christian Gauert) Added control parameters and option to write them",
         "de": "(Christian Gauert) Control Parameter und Möglichkeit zum Schreiben ergänzt",
@@ -176,7 +189,7 @@
   },
   "native": {
     "ipAddr": "127.0.0.1",
-    "pollCycle": 10
+    "pollCycle": 30
   },
   "objects": [],
   "instanceObjects": [

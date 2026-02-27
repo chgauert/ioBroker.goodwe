@@ -198,7 +198,7 @@ class GoodweControlParams {
 
     BattMinSOCOnGrid = new ControlParameter(45356, 1, 1, 1, "%");
 	BattMinSOCOffGrid = new ControlParameter(45358, 1, 1, 1, "%");
-	BackupSOCProtectionEnabled = new ControlParameter(47500, 1, 1, 1, "");
+	SOCProtectionDisabled = new ControlParameter(47500, 1, 1, 1, "");
 	BackupSOCHoldingEnabled = new ControlParameter(47602, 1, 1, 1, "");
 
 	FastChargeEnabled = new ControlParameter(47545, 1, 1, 1, "");
@@ -219,8 +219,8 @@ class GoodweControlParams {
 			if(Register == this.BattMinSOCOffGrid.Register) {
 				return this.BattMinSOCOffGrid;
 			}
-			if(Register == this.BackupSOCProtectionEnabled.Register) {
-				return this.BackupSOCProtectionEnabled;
+			if(Register == this.SOCProtectionDisabled.Register) {
+				return this.SOCProtectionDisabled;
 			}
 			if(Register == this.BackupSOCHoldingEnabled.Register) {
 				return this.BackupSOCHoldingEnabled;
@@ -305,8 +305,12 @@ class UDPRequestType {
 	DataHandlerCallback = null;
 	ControlParameter = null;
 	IsActive = false;
+	SendBuffer = null;
+	AdapterInstance = null;
+	AdapterUpdateCallback = null;
+	Name = "";
 
-	constructor(FcCode, FirstRegister, RegisterCount = 0, DataHandlerCallback, ControlParameter = null) {
+	constructor(Name, FcCode, FirstRegister, RegisterCount = 0, DataHandlerCallback, SendBuffer, AdapterInstance, AdapterUpdateCallback, ControlParameter = null) {
 		this.FunctionCode = FcCode;
 		if(this.FunctionCode == GoodWeRegister.FunctionCode.Read) {
 			this.ErrorFunctionCode = 0x83;
@@ -317,8 +321,16 @@ class UDPRequestType {
 		this.RegisterCount = RegisterCount;
 		this.DataHandlerCallback = DataHandlerCallback;
 		this.ControlParameter = ControlParameter;
+		this.SendBuffer = SendBuffer;
+		this.AdapterUpdateCallback = AdapterUpdateCallback;
+		this.AdapterInstance = AdapterInstance;
+		this.Name = Name;
 	}
 
+	//
+	// member names starting with # --> private 
+	// all others --> public
+	//
 	#GetCRC(Data) {
 		let registerCrc = null;
 		let crc = 0;
@@ -399,6 +411,10 @@ class UDPRequestType {
 	HandleReceivedData(Data) {
 		if(this.DataHandlerCallback != null) {
 			this.DataHandlerCallback(Data, this);
+
+			if(this.AdapterUpdateCallback != null) {
+				this.AdapterUpdateCallback(this.AdapterInstance);
+			}
 		}
 	}
 }
@@ -406,10 +422,12 @@ class UDPRequestType {
 class GoodWeUdp {
 	static ConStatus = { Offline: false, Online: true };
 	// timeout for the answer to an send request, n ms
-	static RequestAnswerTimeout = 1800;
+	static RequestAnswerTimeout = 3000;
 	static RequestAnswerCheckInterval = 10;
 
-	#udpRequestTypes = [];
+	#udpRequestList = [];
+
+	isLocked = false;
 
 	#status = GoodWeUdp.ConStatus.Offline;
 	#ipAddr = "";
@@ -421,6 +439,8 @@ class GoodWeUdp {
 	#extComData = new GoodWeExternalComData();
 	#bmsInfo = new GoodweBmSInfo();
 	#ctrlParameter = new GoodweControlParams();
+	#RequestHandleTimer = null;
+	#AdapterInstance = null;
 
 	constructor() {
 		this.#client.setMaxListeners(0);
@@ -434,55 +454,178 @@ class GoodWeUdp {
 		this.UpdateControlParam = this.UpdateControlParam.bind(this);
 		this.WriteControlParamDone = this.WriteControlParamDone.bind(this);
 	}
-
+	
 	destructor() {
 		this.#client.close();
+		clearTimeout(this.#RequestHandleTimer);
 	}
 
-	Connect(IpAddr, Port) {
+	//
+	// member names starting with # --> private 
+	// all others --> public
+	//		
+	Connect(IpAddr, Port, AdapterInstance) {
 		this.#ipAddr = IpAddr;
 		this.#port = Port;
 
+		this.#AdapterInstance = AdapterInstance;
+
+		this.#RequestHandler();
+
 		this.ReadIdInfo();
 	}
-
+	
 	#AddUDPRequestType(UDPRequest) {
 
-		if(this.#udpRequestTypes.length > 0) {
+		if(this.#udpRequestList.length > 0) {
 
-			const reqType = this.#udpRequestTypes.find(x => x.FunctionCode == UDPRequest.FunctionCode &&
-                                                       x.FirstRegister == UDPRequest.FirstRegister &&
-                                                       x.RegisterCount == UDPRequest.RegisterCount &&
-                                                      x.DataHandlerCallback == UDPRequest.DataHandlerCallback);
+			const reqType = this.#udpRequestList.find(x => x.Name == UDPRequest.Name &&
+                                                           x.FunctionCode == UDPRequest.FunctionCode &&
+                                                           x.FirstRegister == UDPRequest.FirstRegister &&
+                                                           x.RegisterCount == UDPRequest.RegisterCount &&
+                                                           x.DataHandlerCallback == UDPRequest.DataHandlerCallback);
 			if(reqType != undefined) {
 				reqType.IsActive = true;
 				return;
 			}
 		}
 		UDPRequest.IsActive = true;
-		this.#udpRequestTypes.push(UDPRequest);
+		this.#udpRequestList.push(UDPRequest);
 	}
 
 	// eslint-disable-next-line no-unused-vars
 	#HandleUDPMessages(rcvbuf, remoteInfo) {
 
-		if(this.#udpRequestTypes.length > 0) {
-			const reqType = this.#udpRequestTypes.find(x => x.IsRequestData(rcvbuf) == true);
-			if(reqType != undefined) {
-				reqType.HandleReceivedData(rcvbuf);
-				if(reqType.IsActive == false) {
-					// remove request if handled
-					let nIndex = this.#udpRequestTypes.indexOf(reqType);
-					if(nIndex > -1) {
-						this.#udpRequestTypes.splice(nIndex, 1);
+		let reqType = undefined;
+		try {
+
+			if(this.#udpRequestList.length > 0) {
+				reqType = this.#udpRequestList.find(x => x.IsRequestData(rcvbuf) == true);
+				if(reqType != undefined) {
+					reqType.HandleReceivedData(rcvbuf);
+					if(reqType.IsActive == false) {
+
+						// remove request if handled
+						this.#RemoveUdpRequest(reqType);
 					}
 				}
-				return;
 			}
+		}
+		catch(ex) 
+		{ 
+			if(this.#AdapterInstance != null) {
+				this.#AdapterInstance.log.error("Exception in HandleUDPMessages -> " + ex);
+			}
+
+			// remove request from list
+			if(reqType != undefined) {
+				this.#RemoveUdpRequest(reqType);
+			}
+
+		}		
+	}
+
+	#RemoveUdpRequest(request) {
+
+		try {
+			let nIndex = this.#udpRequestList.indexOf(request);
+			if(nIndex > -1) {
+				this.#udpRequestList.splice(nIndex, 1);
+			}
+		}
+		catch(ex) 
+		{ 
+			/* empty */ 
 		}
 	}
 
-	ReadIdInfo() {
+	/*
+	 * handle all requests found in udpRequestList
+	 */
+	async #RequestHandler() {	
+
+		while(this.#udpRequestList.length > 0) {
+
+			const request = this.#udpRequestList.find(x => x !== undefined);		
+			if(request != undefined) {
+
+				let result = this.#SendUdpRequest(request.SendBuffer);
+				if(result == false) {
+					this.#RemoveUdpRequest(request);
+				}
+				else {
+					try {
+						await this.#WaitForResult(request);
+					}
+					catch(ex)
+					{
+						if(this.#AdapterInstance != null) {
+							if(ex != "Timeout") {							
+								this.#AdapterInstance.log.error(request.Name + " - Exception in WaitForResult  -> " + ex);
+							}
+							else {
+								this.#AdapterInstance.log.debug(request.Name + " - Exception in WaitForResult  -> " + ex);
+							}
+						}
+					}
+				}
+			}
+		}		
+		this.#RequestHandleTimer = setTimeout(() => this.#RequestHandler(), 1000);
+	}
+
+	/*
+     * Send the request to the inverter
+	 * 
+	 * all exceptions are passed on to the calling method
+	*/
+    #SendUdpRequest(sendBuffer) {
+
+		this.#client.send(sendBuffer, 0, sendBuffer.length, this.#port, this.#ipAddr, function (err) {
+			if (err) {
+
+				if(this.#AdapterInstance != null) {
+					this.#AdapterInstance.log.error("Error sending data to inverter -> " + err);
+				}
+				return false;
+			}
+		});
+		return true;
+	}
+
+	/*
+     * Wait for the answer to a previously send request
+     * when a timeout is detected the request is removed from the udpRequestList
+	 * 
+	 * all exceptions are passed on to the calling method
+	*/	
+	async #WaitForResult(Request) {
+
+			return new Promise((resolve, reject) => {
+				let repeatCount = 0;
+				let udpRequest = Request;
+
+				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval, this);
+			
+				function check(goodweUdpInstance) {
+					if(udpRequest.IsActive == false) {
+						clearInterval(id);
+						resolve("Finished");
+					}
+					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
+						clearInterval(id);
+
+						goodweUdpInstance.#RemoveUdpRequest(udpRequest);
+
+						reject("Timeout");
+					} else {
+						repeatCount++;
+					}
+				}
+			});			
+	}
+
+	ReadIdInfo(adapterContext) {
 		let sendbuf = new Uint8Array(9);
 		let i;
 		let crc = 0;
@@ -525,17 +668,17 @@ class GoodWeUdp {
 			});
 
 			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err) throw err;
-				//console.log("GoodWePacket send");
+				if (err) 
+					throw err;
 			});
 		}
 
 		catch (error){
-			console.error(error);
+			adapterContext.log.error("Exception in ReadIdInfo -> " + error);
 		}
 	}
 
-	async ReadDeviceInfo() {
+	ReadDeviceInfo(AdapterInstance, AdapterUpdateCallback) {
 		let sendbuf = new Uint8Array(8);
 		let firstRegister = 35000;
 		let registerCount = 33;
@@ -552,40 +695,12 @@ class GoodWeUdp {
 		sendbuf[6] = crc >> 8;
 		sendbuf[7] = crc & 0x00ff;
 
-		let udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, this.UpdateDeviceInfo);
-		this.#AddUDPRequestType(udpReqType);
-
-		try {
-			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err) {
-					throw err;
-				}
-			});
-
-			return new Promise((resolve, reject) => {
-				let repeatCount = 0;
-
-				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval);
-				function check() {
-					if(udpReqType.IsActive == false) {
-						clearInterval(id);
-						resolve("Finished");
-					}
-					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
-						clearInterval(id);
-						reject("Timeout");
-					} else {
-						repeatCount++;
-					}
-				}
-			});			
-		}
-		catch (error){
-			console.error(error);
-		}
+		let udpReqType = new UDPRequestType("ReadDeviceInfo", GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, 
+											this.UpdateDeviceInfo, sendbuf, AdapterInstance, AdapterUpdateCallback);
+		this.#AddUDPRequestType(udpReqType);			
 	}
 
-	async ReadRunningData() {
+	ReadRunningData(AdapterInstance, AdapterUpdateCallback) {
 		let sendbuf = new Uint8Array(8);
 		let firstRegister = 35100;
 		let registerCount = 125;
@@ -602,40 +717,12 @@ class GoodWeUdp {
 		sendbuf[6] = crc >> 8;
 		sendbuf[7] = crc & 0x00ff;
 
-		let udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, this.UpdateRunningData);
-		this.#AddUDPRequestType(udpReqType);
-		
-		try{
-			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err) {
-					throw err;
-				}
-			});
-
-			return new Promise((resolve, reject) => {
-				let repeatCount = 0;
-
-				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval);
-				function check() {
-					if(udpReqType.IsActive == false) {
-						clearInterval(id);
-						resolve("Finished");
-					}
-					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
-						clearInterval(id);
-						reject("Timeout");
-					} else {
-						repeatCount++;
-					}
-				}
-			});			
-		}
-		catch (error){
-			console.error(error);
-		}
+		let udpReqType = new UDPRequestType("ReadRunningData", GoodWeRegister.FunctionCode.Read,firstRegister, registerCount,
+											this.UpdateRunningData, sendbuf, AdapterInstance, AdapterUpdateCallback);
+		this.#AddUDPRequestType(udpReqType);			
 	}
 
-	async ReadExtComData() {
+	ReadExtComData(AdapterInstance, AdapterUpdateCallback) {
 		let sendbuf = new Uint8Array(8);
 		let firstRegister = 36000;
 		let registerCount = 27;
@@ -652,41 +739,12 @@ class GoodWeUdp {
 		sendbuf[6] = crc >> 8;
 		sendbuf[7] = crc & 0x00ff;
 
-		let udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, this.UpdateExtComData);
-		this.#AddUDPRequestType(udpReqType);
-
-		try {
-			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err) {
-					throw err;
-				}
-			});
-
-			return new Promise((resolve, reject) => {
-				let repeatCount = 0;
-
-				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval);
-				function check() {
-					if(udpReqType.IsActive == false) {
-						clearInterval(id);
-						resolve("Finished");
-					}
-					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
-						clearInterval(id);
-						reject("Timeout");
-					} else {
-						repeatCount++;
-					}
-				}
-			});			
-		}
-
-		catch (error){
-			console.error(error);
-		}
+		let udpReqType = new UDPRequestType("ReadExtComData", GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, 
+											this.UpdateExtComData, sendbuf, AdapterInstance, AdapterUpdateCallback);
+		this.#AddUDPRequestType(udpReqType);			
 	}
 
-	async ReadBmsInfo() {
+	ReadBmsInfo(AdapterInstance, AdapterUpdateCallback) {
 		let sendbuf = new Uint8Array(8);
 		let firstRegister = 37002;
 		let registerCount = 67;
@@ -703,41 +761,12 @@ class GoodWeUdp {
 		sendbuf[6] = crc >> 8;
 		sendbuf[7] = crc & 0x00ff;
 
-		let udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, this.UpdateBmsInfo);
-		this.#AddUDPRequestType(udpReqType);
-
-		try {
-			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err) {
-					throw err;
-				}
-			});
-
-			return new Promise((resolve, reject) => {
-				let repeatCount = 0;
-
-				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval);
-				function check() {
-					if(udpReqType.IsActive == false) {
-						clearInterval(id);
-						resolve("Finished");
-					}
-					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
-						clearInterval(id);
-						reject("Timeout");
-					} else {
-						repeatCount++;
-					}
-				}
-			});			
-		}
-
-		catch (error){
-			console.error(error);
-		}
+		let udpReqType = new UDPRequestType("ReadBmsInfo", GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, 
+											this.UpdateBmsInfo, sendbuf, AdapterInstance, AdapterUpdateCallback);
+		this.#AddUDPRequestType(udpReqType);		
 	}
 
-	async ReadControlDataBlock1() {
+	ReadControlDataBlock1(AdapterInstance, AdapterUpdateCallback) {
 		// Blockweise Lesen wird benötigt da die UDP Antworten kein Register enthalten sondern 
 		// nur die Datenlänge
 		// damit ist ein Unterscheiden der einzelnen Paramerter-Lese-Requests nicht möglich, da die 
@@ -745,11 +774,11 @@ class GoodWeUdp {
 
 		// read data for ShadowScanEnabled (45251) and ShadowScanCycle (45295)
 		let dataBlock1 = new ControlParameter(45220, 76, 1, 1, "");
-		await this.ReadControlParameter(dataBlock1)
-                   .catch((ex) => {throw ex});		   
+
+		this.ReadControlParameter("ShadowScanData", dataBlock1, AdapterInstance, AdapterUpdateCallback);
 	}
 
-	async ReadControlDataBlock2() {
+	ReadControlDataBlock2(AdapterInstance, AdapterUpdateCallback) {
 		// Blockweise Lesen wird benötigt da die UDP Antworten kein Register enthalten sondern 
 		// nur die Datenlänge
 		// damit ist ein Unterscheiden der einzelnen Paramerter-Lese-Requests nicht möglich, da die 
@@ -757,24 +786,24 @@ class GoodWeUdp {
 
 		// read data for BattMinSOCOnGrid (45356) and BattMinSOCOffGrid (45358)
 		let dataBlock2 = new ControlParameter(45350, 9, 1, 1, "");
-		await this.ReadControlParameter(dataBlock2)
-                   .catch((ex) => { throw ex });			   
+
+		this.ReadControlParameter("BatteryMinSOCData", dataBlock2, AdapterInstance, AdapterUpdateCallback);
 	}
 
-	async ReadControlDataBlock3() {
+	ReadControlDataBlock3(AdapterInstance, AdapterUpdateCallback) {
 		// Blockweise Lesen wird benötigt da die UDP Antworten kein Register enthalten sondern 
 		// nur die Datenlänge
 		// damit ist ein Unterscheiden der einzelnen Paramerter-Lese-Requests nicht möglich, da die 
 		// alle gleich lang sind (1 Register, 2 Byte lang)
 
-		// read data for BackupSOCProtectionEnabled (47500), FastChargeEnabled(47545), 
+		// read data for SOCProtectionDisabled (47500), FastChargeEnabled(47545), 
 		// FastChargeSOCStop (47546) and BackupSOCHoldingEnabled (47602)
 		let dataBlock3 = new ControlParameter(47500, 103, 1, 1, "");
-		await this.ReadControlParameter(dataBlock3)
-                   .catch((ex) => { throw ex });			   
+
+		this.ReadControlParameter("FastChargeData", dataBlock3, AdapterInstance, AdapterUpdateCallback);
 	}
 
-	async ReadControlParameter(Param) {
+	ReadControlParameter(Name, Param, AdapterInstance, AdapterUpdateCallback) {
 
 		let sendbuf = new Uint8Array(8);
 		let firstRegister = Param.Register;
@@ -792,41 +821,12 @@ class GoodWeUdp {
 		sendbuf[6] = crc >> 8;
 		sendbuf[7] = crc & 0x00ff;
 		
-		let udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, this.UpdateControlParam, Param);
-		this.#AddUDPRequestType(udpReqType);
-
-		try 
-		{			
-			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err){
-					throw err;						
-				}
-			});		
-
-			return new Promise((resolve, reject) => {
-				let repeatCount = 0;
-
-				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval);
-				function check() {
-					if(udpReqType.IsActive == false) {
-						clearInterval(id);
-						resolve("Finished");
-					}
-					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
-						clearInterval(id);
-						reject("Timeout");
-					} else {
-						repeatCount++;
-					}
-				}
-			});
-		}
-		catch (error){
-			console.error(error);			
-		}
+		let udpReqType = new UDPRequestType(Name, GoodWeRegister.FunctionCode.Read,firstRegister, registerCount, 
+											this.UpdateControlParam, sendbuf, AdapterInstance, AdapterUpdateCallback, Param);
+		this.#AddUDPRequestType(udpReqType);		
 	}
 
-	async WriteControlParameter(Param) {
+	WriteControlParameter(Param) {
 
 		let sendbuf = null;
 		let crc = 0;
@@ -857,7 +857,8 @@ class GoodWeUdp {
 			sendbuf[6] = crc >> 8;
 			sendbuf[7] = crc & 0x00ff;	
 
-			udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.WriteSingleRegister,firstRegister, registerCount, this.WriteControlParamDone, Param);
+			udpReqType = new UDPRequestType(Param.Register.ToString(), GoodWeRegister.FunctionCode.WriteSingleRegister,firstRegister, registerCount, 
+											this.WriteControlParamDone, sendbuf, null, null, Param);
 			this.#AddUDPRequestType(udpReqType);
 		} else {
 
@@ -886,38 +887,9 @@ class GoodWeUdp {
 			sendbuf[nArrayLen-2] = crc >> 8;
 			sendbuf[nArrayLen-1] = crc & 0x00ff;
 
-			udpReqType = new UDPRequestType(GoodWeRegister.FunctionCode.WriteMultipleRegister, firstRegister, registerCount, this.WriteControlParamDone, Param);
+			udpReqType = new UDPRequestType(Param.Register.ToString(), GoodWeRegister.FunctionCode.WriteMultipleRegister, firstRegister, registerCount, 
+											this.WriteControlParamDone, sendbuf, null, null, Param);
 			this.#AddUDPRequestType(udpReqType);			
-		}
-
-		try 
-		{			
-			this.#client.send(sendbuf, 0, sendbuf.length, this.#port, this.#ipAddr, function (err) {
-				if (err){
-					throw err;						
-				}
-			});		
-
-			return new Promise((resolve, reject) => {
-				let repeatCount = 0;
-
-				let id = setInterval(check, GoodWeUdp.RequestAnswerCheckInterval);
-				function check() {
-					if(udpReqType.IsActive == false) {
-						clearInterval(id);
-						resolve("Finished");
-					}
-					else if(repeatCount == (GoodWeUdp.RequestAnswerTimeout / GoodWeUdp.RequestAnswerCheckInterval)) {
-						clearInterval(id);
-						reject("Timeout");
-					} else {
-						repeatCount++;
-					}
-				}
-			});		
-		}
-		catch (error){
-			console.error(error);			
 		}	
 	}
 
@@ -1253,11 +1225,11 @@ class GoodWeUdp {
 
 			this.#status = GoodWeUdp.ConStatus.Online;
 		}
-		// data for BackupSOCProtectionEnabled (47500), FastChargeEnabled(47545), 
+		// data for SOCProtectionDisabled (47500), FastChargeEnabled(47545), 
 		// FastChargeSOCStop (47546) and BackupSOCHoldingEnabled (47602)
 		else if ( RequestType.ControlParameter.Register == 47500) {
 
-			this.#GetRegisterValueFromBlockData(rcvbuf, 47500, this.#ctrlParameter.BackupSOCProtectionEnabled);
+			this.#GetRegisterValueFromBlockData(rcvbuf, 47500, this.#ctrlParameter.SOCProtectionDisabled);
 			this.#GetRegisterValueFromBlockData(rcvbuf, 47500, this.#ctrlParameter.FastChargeEnabled);
 			this.#GetRegisterValueFromBlockData(rcvbuf, 47500, this.#ctrlParameter.FastChargeSOCStop);
 			this.#GetRegisterValueFromBlockData(rcvbuf, 47500, this.#ctrlParameter.BackupSOCHoldingEnabled);

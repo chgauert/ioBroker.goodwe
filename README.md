@@ -8,7 +8,7 @@
 
 [![NPM](https://nodei.co/npm/iobroker.goodwe.png?downloads=true)](https://nodei.co/npm/iobroker.goodwe/)
 
-**Tests:** ![Test and Release](https://github.com/FossyTom/ioBroker.goodwe/workflows/Test%20and%20Release/badge.svg)
+**Tests:** ![Test and Release](https://github.com/chgauert/ioBroker.goodwe/workflows/Test%20and%20Release/badge.svg)
 
 ## goodwe adapter for ioBroker
 
@@ -21,6 +21,13 @@ Communication with GoodWe Inverter ET/EH/BH/BT Series
 	Placeholder for the next version (at the beginning of the line):
 	### **WORK IN PROGRESS**
 -->
+### 1.0.7 (2026-02-27)
+* (Christian Gauert) Changed methods reading data from the inverter
+### 1.0.6 (2025-10-12)
+* (Christian Gauert) Added control parameters
+* (Christian Gauert) Added more parameters to read
+### 1.0.5 (2024-12-22)
+* (Christian Gauert) Added several modifications based on python goodwe library
 ### 1.0.4 (2023-02-19)
 * (Thomas Schönberger) Add some Logs for ENETUNREACH error
 
