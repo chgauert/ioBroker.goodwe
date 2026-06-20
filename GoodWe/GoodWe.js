@@ -486,7 +486,7 @@ class GoodWeUdp {
                                                            x.FirstRegister == UDPRequest.FirstRegister &&
                                                            x.RegisterCount == UDPRequest.RegisterCount &&
                                                            x.DataHandlerCallback == UDPRequest.DataHandlerCallback);
-			if(reqType != undefined) {
+			if(reqType) {
 				reqType.IsActive = true;
 				return;
 			}
@@ -503,7 +503,7 @@ class GoodWeUdp {
 
 			if(this.#udpRequestList.length > 0) {
 				reqType = this.#udpRequestList.find(x => x.IsRequestData(rcvbuf) == true);
-				if(reqType != undefined) {
+				if(reqType) {
 					reqType.HandleReceivedData(rcvbuf);
 					if(reqType.IsActive == false) {
 
@@ -515,12 +515,12 @@ class GoodWeUdp {
 		}
 		catch(ex) 
 		{ 
-			if(this.#AdapterInstance != null) {
+			if(this.#AdapterInstance) {
 				this.#AdapterInstance.log.error("Exception in HandleUDPMessages -> " + ex);
 			}
 
 			// remove request from list
-			if(reqType != undefined) {
+			if(reqType) {
 				this.#RemoveUdpRequest(reqType);
 			}
 
@@ -549,7 +549,7 @@ class GoodWeUdp {
 		while(this.#udpRequestList.length > 0) {
 
 			const request = this.#udpRequestList.find(x => x !== undefined);		
-			if(request != undefined) {
+			if(request) {
 
 				let result = this.#SendUdpRequest(request.SendBuffer);
 				if(result == false) {
@@ -561,7 +561,7 @@ class GoodWeUdp {
 					}
 					catch(ex)
 					{
-						if(this.#AdapterInstance != null) {
+						if(this.#AdapterInstance) {
 							if(ex != "Timeout") {							
 								this.#AdapterInstance.log.error(request.Name + " - Exception in WaitForResult  -> " + ex);
 							}
@@ -578,21 +578,27 @@ class GoodWeUdp {
 
 	/*
      * Send the request to the inverter
-	 * 
-	 * all exceptions are passed on to the calling method
 	*/
     #SendUdpRequest(sendBuffer) {
 
-		this.#client.send(sendBuffer, 0, sendBuffer.length, this.#port, this.#ipAddr, function (err) {
-			if (err) {
-
-				if(this.#AdapterInstance != null) {
-					this.#AdapterInstance.log.error("Error sending data to inverter -> " + err);
+		try {
+			this.#client.send(sendBuffer, 0, sendBuffer.length, this.#port, this.#ipAddr, function (err) {
+				if (err) {
+					if(this.#AdapterInstance) {
+						this.#AdapterInstance.log.error("Error sending data to inverter -> " + err);
+					}
+					return false;
 				}
-				return false;
+			});
+			return true;
+		}
+		catch(ex)
+		{
+			if(this.#AdapterInstance) {
+				this.#AdapterInstance.log.debug("Exception in SendUdpRequest -> " + ex);
 			}
-		});
-		return true;
+			return false;
+		}
 	}
 
 	/*

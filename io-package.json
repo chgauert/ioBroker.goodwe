@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "goodwe",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "news": {
+      "1.0.9": {
+        "en": "(Christian Gauert) bugfixes",
+        "de": "(Christian Gauert) Fehlerbehebungen wenn Gerät nicht erreichbar"
+      },         
       "1.0.7": {
         "en": "(Christian Gauert) Changed data-read mechanism",
         "de": "(Christian Gauert) Routinen zum Lesen der Daten vom Inverter geändert",
