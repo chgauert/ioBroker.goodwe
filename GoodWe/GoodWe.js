@@ -546,33 +546,42 @@ class GoodWeUdp {
 	 */
 	async #RequestHandler() {	
 
-		while(this.#udpRequestList.length > 0) {
+		try
+		{
+			while(this.#udpRequestList.length > 0) {
 
-			const request = this.#udpRequestList.find(x => x !== undefined);		
-			if(request) {
+				const request = this.#udpRequestList.find(x => x !== undefined);		
+				if(request) {
 
-				let result = this.#SendUdpRequest(request.SendBuffer);
-				if(result == false) {
-					this.#RemoveUdpRequest(request);
-				}
-				else {
-					try {
-						await this.#WaitForResult(request);
+					let result = this.#SendUdpRequest(request.SendBuffer);
+					if(result == false) {
+						this.#RemoveUdpRequest(request);
 					}
-					catch(ex)
-					{
-						if(this.#AdapterInstance) {
-							if(ex != "Timeout") {							
-								this.#AdapterInstance.log.error(request.Name + " - Exception in WaitForResult  -> " + ex);
-							}
-							else {
-								this.#AdapterInstance.log.debug(request.Name + " - Exception in WaitForResult  -> " + ex);
+					else {
+						try {
+							await this.#WaitForResult(request);
+						}
+						catch(ex)
+						{
+							if(this.#AdapterInstance) {
+								if(ex != "Timeout") {							
+									this.#AdapterInstance.log.error(request.Name + " - Exception in WaitForResult  -> " + ex);
+								}
+								else {
+									this.#AdapterInstance.log.debug(request.Name + " - Exception in WaitForResult  -> " + ex);
+								}
 							}
 						}
 					}
 				}
 			}
-		}		
+		}
+		catch(ex)
+		{
+			if(this.#AdapterInstance) {
+				this.#AdapterInstance.log.debug("Exception in RequestHandler -> " + ex);
+			}			
+		}
 		this.#RequestHandleTimer = setTimeout(() => this.#RequestHandler(), 1000);
 	}
 
@@ -682,7 +691,9 @@ class GoodWeUdp {
 		}
 
 		catch (error){
-			adapterContext.log.error("Exception in ReadIdInfo -> " + error);
+			if(adapterContext) {
+				adapterContext.log.error("Exception in ReadIdInfo -> " + error);
+			}
 		}
 	}
 

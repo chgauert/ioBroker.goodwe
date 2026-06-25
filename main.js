@@ -50,13 +50,6 @@ class Goodwe extends utils.Adapter {
 		this.inverter.Connect(this.config.ipAddr, 8899, this);
 
 		this.myTimer();
-		
-		// examples for the checkPassword/checkGroup functions
-		let result = await this.checkPasswordAsync("admin", "iobroker");
-		this.log.info("check user admin pw iobroker: " + result);
-
-		result = await this.checkGroupAsync("admin", "admin");
-		this.log.info("check group user admin group admin: " + result);
 
         // Alle eigenen States abonnieren		
 		const ctrlParamNamespace = this.namespace + ".ControlParameter.*";
